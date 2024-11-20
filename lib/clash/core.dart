@@ -19,13 +19,7 @@ class ClashCore {
   late final DynamicLibrary lib;
 
   DynamicLibrary _getClashLib() {
-    if (Platform.isWindows) {
-      return DynamicLibrary.open("libclash.dll");
-    }
-    if (Platform.isMacOS) {
-      return DynamicLibrary.open("libclash.dylib");
-    }
-    if (Platform.isAndroid || Platform.isLinux) {
+    if (Platform.isAndroid) {
       return DynamicLibrary.open("libclash.so");
     }
     throw "Platform is not supported";
