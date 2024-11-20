@@ -73,10 +73,6 @@ class AppController {
     }
   }
 
-  updateCoreVersionInfo() {
-    globalState.updateCoreVersionInfo(appState);
-  }
-
   updateRunTime() {
     final startTime = globalState.startTime;
     if (startTime != null) {

@@ -69,10 +69,6 @@ class GlobalState {
     if (res.isNotEmpty) throw res;
   }
 
-  updateCoreVersionInfo(AppState appState) {
-    appState.versionInfo = clashCore.getVersionInfo();
-  }
-
   handleStart() async {
     clashCore.start();
     if (globalState.isVpnService) {
@@ -146,7 +142,6 @@ class GlobalState {
         );
       }
     }
-    updateCoreVersionInfo(appState);
   }
 
   Future<void> updateGroups(AppState appState) async {
