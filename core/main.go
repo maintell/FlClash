@@ -38,7 +38,6 @@ func handleConnection(conn net.Conn) {
 
 	reader := bufio.NewReader(conn)
 	for {
-		// 读取客户端发送的消息
 		message, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Connection closed by client:", conn.RemoteAddr())
@@ -47,7 +46,6 @@ func handleConnection(conn net.Conn) {
 
 		fmt.Printf("Message from %s: %s", conn.RemoteAddr(), message)
 
-		// 回复客户端
 		_, err = conn.Write([]byte("Message received: " + message))
 		if err != nil {
 			fmt.Println("Error writing to client:", err)

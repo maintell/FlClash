@@ -31,11 +31,12 @@ import (
 	"github.com/metacubex/mihomo/tunnel/statistic"
 )
 
-var configParams = ConfigExtendedParams{}
-
-var externalProviders = map[string]cp.Provider{}
-
-var isInit = false
+var (
+	configParams      = ConfigExtendedParams{}
+	externalProviders = map[string]cp.Provider{}
+	isInit            = false
+	updateLock        sync.Mutex
+)
 
 //export start
 func start() {
@@ -105,8 +106,6 @@ func validateConfig(s *C.char, port C.longlong) {
 		bridge.SendToPort(i, "")
 	}()
 }
-
-var updateLock sync.Mutex
 
 //export updateConfig
 func updateConfig(s *C.char, port C.longlong) {

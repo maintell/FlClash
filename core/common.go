@@ -6,6 +6,7 @@ import (
 	"core/state"
 	"errors"
 	"fmt"
+	"github.com/metacubex/mihomo/common/batch"
 	"github.com/metacubex/mihomo/constant/features"
 	"github.com/metacubex/mihomo/hub/route"
 	"github.com/samber/lo"
@@ -22,7 +23,6 @@ import (
 	"github.com/metacubex/mihomo/adapter/inbound"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/adapter/provider"
-	"github.com/metacubex/mihomo/common/batch"
 	"github.com/metacubex/mihomo/component/dialer"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/config"
@@ -81,7 +81,12 @@ func (a ExternalProviders) Len() int           { return len(a) }
 func (a ExternalProviders) Less(i, j int) bool { return a[i].Name < a[j].Name }
 func (a ExternalProviders) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
-var b, _ = batch.New[bool](context.Background(), batch.WithConcurrencyNum[bool](50))
+var (
+	isRunning = false
+	runLock   sync.Mutex
+	ips       = []string{"ipinfo.io", "ipapi.co", "api.ip.sb", "ipwho.is"}
+	b, _      = batch.New[bool](context.Background(), batch.WithConcurrencyNum[bool](50))
+)
 
 func restartExecutable(execPath string) {
 	var err error
@@ -262,8 +267,6 @@ func trimArr(arr []string) (r []string) {
 	return
 }
 
-var ips = []string{"ipinfo.io", "ipapi.co", "api.ip.sb", "ipwho.is"}
-
 func overrideRules(rules *[]string) {
 	var target = ""
 	for _, line := range *rules {
@@ -325,16 +328,6 @@ func overwriteConfig(targetConfig *config.RawConfig, patchConfig config.RawConfi
 		}
 	}
 	overrideRules(&targetConfig.Rule)
-	//if runtime.GOOS == "android" {
-	//	targetConfig.DNS.NameServer = append(targetConfig.DNS.NameServer, "dhcp://"+dns.SystemDNSPlaceholder)
-	//} else if runtime.GOOS == "windows" {
-	//	targetConfig.DNS.NameServer = append(targetConfig.DNS.NameServer, dns.SystemDNSPlaceholder)
-	//}
-	//if configParams.IsCompatible == false {
-	//	targetConfig.ProxyProvider = make(map[string]map[string]any)
-	//	targetConfig.RuleProvider = make(map[string]map[string]any)
-	//	generateProxyGroupAndRule(&targetConfig.ProxyGroup, &targetConfig.Rule)
-	//}
 }
 
 func patchConfig(general *config.General, controller *config.Controller, tls *config.TLS) {
@@ -364,10 +357,6 @@ func patchConfig(general *config.General, controller *config.Controller, tls *co
 		},
 	})
 }
-
-var isRunning = false
-
-var runLock sync.Mutex
 
 func updateListeners(general *config.General, listeners map[string]constant.InboundListener) {
 	if !isRunning {
