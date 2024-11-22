@@ -6,20 +6,7 @@ import (
 	"github.com/metacubex/mihomo/constant"
 )
 
-var Port int64
-var ServicePort int64
-
 type MessageType string
-
-const (
-	LogMessage     MessageType = "log"
-	ProtectMessage MessageType = "protect"
-	DelayMessage   MessageType = "delay"
-	ProcessMessage MessageType = "process"
-	RequestMessage MessageType = "request"
-	StartedMessage MessageType = "started"
-	LoadedMessage  MessageType = "loaded"
-)
 
 type Delay struct {
 	Name  string `json:"name"`
@@ -30,6 +17,21 @@ type Process struct {
 	Id       int64              `json:"id"`
 	Metadata *constant.Metadata `json:"metadata"`
 }
+
+var (
+	Port        int64
+	ServicePort int64
+)
+
+const (
+	LogMessage     MessageType = "log"
+	ProtectMessage MessageType = "protect"
+	DelayMessage   MessageType = "delay"
+	ProcessMessage MessageType = "process"
+	RequestMessage MessageType = "request"
+	StartedMessage MessageType = "started"
+	LoadedMessage  MessageType = "loaded"
+)
 
 type Message struct {
 	Type MessageType `json:"type"`

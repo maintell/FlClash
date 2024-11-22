@@ -10,6 +10,7 @@ import (
 	"core/state"
 	"encoding/json"
 	"fmt"
+	"github.com/metacubex/mihomo/common/observable"
 	"github.com/metacubex/mihomo/common/utils"
 	"os"
 	"runtime"
@@ -34,8 +35,8 @@ import (
 var (
 	configParams      = ConfigExtendedParams{}
 	externalProviders = map[string]cp.Provider{}
-	isInit            = false
 	updateLock        sync.Mutex
+	logSubscriber     observable.Subscription[log.Event]
 )
 
 //export start
@@ -57,11 +58,7 @@ func stop() {
 
 //export initClash
 func initClash(homeDirStr *C.char) bool {
-	if !isInit {
-		constant.SetHomeDir(C.GoString(homeDirStr))
-		isInit = true
-	}
-	return isInit
+	return handleInitClash(C.GoString(homeDirStr))
 }
 
 //export getIsInit
@@ -442,6 +439,35 @@ func initMessage(port C.longlong) {
 //export freeCString
 func freeCString(s *C.char) {
 	C.free(unsafe.Pointer(s))
+}
+
+//export startLog
+func startLog() {
+	if logSubscriber != nil {
+		log.UnSubscribe(logSubscriber)
+		logSubscriber = nil
+	}
+	logSubscriber = log.Subscribe()
+	go func() {
+		for logData := range logSubscriber {
+			if logData.LogLevel < log.Level() {
+				continue
+			}
+			message := &Message{
+				Type: LogMessage,
+				Data: logData,
+			}
+			SendMessage(*message)
+		}
+	}()
+}
+
+//export stopLog
+func stopLog() {
+	if logSubscriber != nil {
+		log.UnSubscribe(logSubscriber)
+		logSubscriber = nil
+	}
 }
 
 func init() {
