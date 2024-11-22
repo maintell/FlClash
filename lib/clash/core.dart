@@ -23,7 +23,7 @@ class ClashCore {
     return _instance!;
   }
 
-  bool init(String homeDir) {
+  Future<bool> init(String homeDir) async {
     return clashInterface.init(homeDir);
   }
 

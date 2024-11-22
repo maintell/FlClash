@@ -30,7 +30,7 @@ class ClashLib with ClashInterface {
   }
 
   @override
-  bool init(String homeDir) {
+  Future<bool> init(String homeDir) async {
     final homeDirChar = homeDir.toNativeUtf8().cast<Char>();
     final isInit = clashFFI.initClash(homeDirChar) == 1;
     malloc.free(homeDirChar);

@@ -28,7 +28,6 @@ class ClashHub with ClashInterface {
     final process = await Process.start(path, []);
     process.stdout.listen((data) {
       final output = String.fromCharCodes(data).trim();
-      print(output);
       if (output.startsWith("Port: ")) {
         final match = RegExp(r'\b\d+\b').firstMatch(output);
         if (match == null) {
@@ -41,21 +40,18 @@ class ClashHub with ClashInterface {
   }
 
   _connectCore(int port) async {
-    socketCompleter.complete(Socket.connect(localhost, port));
+    final socket = await Socket.connect(localhost, port);
+    socketCompleter.complete(socket);
+    socket.listen((data) {});
   }
 
-  get socket async => socketCompleter.future;
-
   @override
-  bool init(String homeDir) {
-    socketCompleter.future.then((socket) async {
-      socket.writeln(json.encode(
-        {
-          "method": "initClash",
-          "data": "123",
-        },
-      ));
-    });
+  Future<bool> init(String homeDir) async {
+    final socket = await socketCompleter.future;
+    socket.writeln(json.encode({
+      "method": "initClash",
+      "data": homeDir,
+    }));
     return false;
   }
 }

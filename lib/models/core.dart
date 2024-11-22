@@ -4,8 +4,30 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'generated/ffi.freezed.dart';
-part 'generated/ffi.g.dart';
+part 'generated/core.freezed.dart';
+part 'generated/core.g.dart';
+
+abstract mixin class AppMessageListener {
+  void onLog(Log log) {}
+
+  void onDelay(Delay delay) {}
+
+  void onRequest(Connection connection) {}
+
+  void onStarted(String runTime) {}
+
+  void onLoaded(String providerName) {}
+}
+
+abstract mixin class ServiceMessageListener {
+  onProtect(Fd fd) {}
+
+  onProcess(Process process) {}
+
+  onStarted(String runTime) {}
+
+  onLoaded(String providerName) {}
+}
 
 @freezed
 class CoreState with _$CoreState {
@@ -210,26 +232,4 @@ class TunProps with _$TunProps {
 
   factory TunProps.fromJson(Map<String, Object?> json) =>
       _$TunPropsFromJson(json);
-}
-
-abstract mixin class AppMessageListener {
-  void onLog(Log log) {}
-
-  void onDelay(Delay delay) {}
-
-  void onRequest(Connection connection) {}
-
-  void onStarted(String runTime) {}
-
-  void onLoaded(String providerName) {}
-}
-
-abstract mixin class ServiceMessageListener {
-  onProtect(Fd fd) {}
-
-  onProcess(Process process) {}
-
-  onStarted(String runTime) {}
-
-  onLoaded(String providerName) {}
 }

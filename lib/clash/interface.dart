@@ -1,3 +1,3 @@
 mixin ClashInterface {
-  bool init(String homeDir);
+  Future<bool> init(String homeDir);
 }

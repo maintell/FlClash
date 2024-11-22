@@ -15,7 +15,6 @@ import 'models/models.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  clashCore.init("asdad");
   // clashCore.initMessage();
   // globalState.packageInfo = await PackageInfo.fromPlatform();
   // final version = await system.version;

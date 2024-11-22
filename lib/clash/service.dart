@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/cupertino.dart';
@@ -46,8 +47,7 @@ class ClashService {
   }) async {
     await initGeo();
     final homeDirPath = await appPath.getHomeDirPath();
-    final isInit = clashCore.init(homeDirPath);
-    return isInit;
+    return await clashCore.init(homeDirPath);
   }
 }
 
