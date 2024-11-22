@@ -86,7 +86,7 @@ Future<void> vpnService() async {
         await vpn?.setProtect(fd.value);
         clashCore.setFdMap(fd.id);
       },
-      onProcess: (Process process) async {
+      onProcess: (ProcessData process) async {
         final packageName = await vpn?.resolverProcess(process);
         clashCore.setProcessMap(
           ProcessMapItem(
@@ -139,13 +139,13 @@ Future<void> vpnService() async {
 @immutable
 class ServiceMessageHandler with ServiceMessageListener {
   final Function(Fd fd) _onProtect;
-  final Function(Process process) _onProcess;
+  final Function(ProcessData process) _onProcess;
   final Function(String runTime) _onStarted;
   final Function(String providerName) _onLoaded;
 
   const ServiceMessageHandler({
     required Function(Fd fd) onProtect,
-    required Function(Process process) onProcess,
+    required Function(ProcessData process) onProcess,
     required Function(String runTime) onStarted,
     required Function(String providerName) onLoaded,
   })  : _onProtect = onProtect,
@@ -159,7 +159,7 @@ class ServiceMessageHandler with ServiceMessageListener {
   }
 
   @override
-  onProcess(Process process) {
+  onProcess(ProcessData process) {
     _onProcess(process);
   }
 

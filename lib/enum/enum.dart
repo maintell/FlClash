@@ -178,3 +178,7 @@ enum RouteMode {
   bypassPrivate,
   config,
 }
+
+enum ActionMethod {
+  initClash,
+}

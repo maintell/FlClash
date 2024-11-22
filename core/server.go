@@ -13,7 +13,7 @@ func init() {
 	if err != nil {
 		os.Exit(1)
 	}
-	fmt.Printf("Port: %d\n ", listener.Addr().(*net.TCPAddr).Port)
+	fmt.Printf("%d\n ", listener.Addr().(*net.TCPAddr).Port)
 	defer func(listener net.Listener) {
 		_ = listener.Close()
 	}(listener)

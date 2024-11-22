@@ -54,7 +54,7 @@ class Vpn {
     return await methodChannel.invokeMethod<bool?>("setProtect", {'fd': fd});
   }
 
-  Future<String?> resolverProcess(Process process) async {
+  Future<String?> resolverProcess(ProcessData process) async {
     return await methodChannel.invokeMethod<String>("resolverProcess", {
       "data": json.encode(process),
     });
@@ -92,7 +92,7 @@ class Vpn {
       case ServiceMessageType.protect:
         _serviceMessageHandler?.onProtect(Fd.fromJson(m.data));
       case ServiceMessageType.process:
-        _serviceMessageHandler?.onProcess(Process.fromJson(m.data));
+        _serviceMessageHandler?.onProcess(ProcessData.fromJson(m.data));
       case ServiceMessageType.started:
         _serviceMessageHandler?.onStarted(m.data);
       case ServiceMessageType.loaded:
