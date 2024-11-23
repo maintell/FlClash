@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+var conn net.Conn
+
 func init() {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -19,7 +21,7 @@ func init() {
 	}(listener)
 
 	for {
-		conn, err := listener.Accept()
+		conn, err = listener.Accept()
 		if err != nil {
 			fmt.Printf("Accept err: %s\n ", err.Error())
 			continue
@@ -34,6 +36,7 @@ func handleConnection(conn net.Conn) {
 	}(conn)
 
 	reader := bufio.NewReader(conn)
+
 	for {
 		data, err := reader.ReadString('\n')
 		if err != nil {
@@ -56,6 +59,11 @@ func handleAction(action *Action) {
 	switch action.Method {
 	case initClashMethod:
 		data := action.Data.(string)
-		handleInitClash(data)
+		res, _ := Action{
+			Method: initClashMethod,
+			Data:   handleInitClash(data),
+		}.Json()
+		_, _ = conn.Write(res)
+		return
 	}
 }

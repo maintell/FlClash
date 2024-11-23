@@ -9,52 +9,52 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'application.dart';
 import 'common/common.dart';
 import 'l10n/l10n.dart';
 import 'models/models.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // clashCore.initMessage();
-  // globalState.packageInfo = await PackageInfo.fromPlatform();
-  // final version = await system.version;
-  // final config = await preferences.getConfig() ?? Config();
-  // await AppLocalizations.load(
-  //   other.getLocaleForString(config.appSetting.locale) ??
-  //       WidgetsBinding.instance.platformDispatcher.locale,
-  // );
-  // final clashConfig = await preferences.getClashConfig() ?? ClashConfig();
-  // await android?.init();
-  // await window?.init(config.windowProps, version);
-  // final appState = AppState(
-  //   mode: clashConfig.mode,
-  //   version: version,
-  //   selectedMap: config.currentSelectedMap,
-  // );
-  // final appFlowingState = AppFlowingState();
-  // appState.navigationItems = navigation.getItems(
-  //   openLogs: config.appSetting.openLogs,
-  //   hasProxies: false,
-  // );
-  // globalState.updateTray(
-  //   appState: appState,
-  //   appFlowingState: appFlowingState,
-  //   config: config,
-  //   clashConfig: clashConfig,
-  // );
-  // await globalState.init(
-  //   appState: appState,
-  //   config: config,
-  //   clashConfig: clashConfig,
-  // );
-  // HttpOverrides.global = FlClashHttpOverrides();
-  // runAppWithPreferences(
-  //   const Application(),
-  //   appState: appState,
-  //   appFlowingState: appFlowingState,
-  //   config: config,
-  //   clashConfig: clashConfig,
-  // );
+  globalState.packageInfo = await PackageInfo.fromPlatform();
+  final version = await system.version;
+  final config = await preferences.getConfig() ?? Config();
+  await AppLocalizations.load(
+    other.getLocaleForString(config.appSetting.locale) ??
+        WidgetsBinding.instance.platformDispatcher.locale,
+  );
+  final clashConfig = await preferences.getClashConfig() ?? ClashConfig();
+  await android?.init();
+  await window?.init(config.windowProps, version);
+  final appState = AppState(
+    mode: clashConfig.mode,
+    version: version,
+    selectedMap: config.currentSelectedMap,
+  );
+  final appFlowingState = AppFlowingState();
+  appState.navigationItems = navigation.getItems(
+    openLogs: config.appSetting.openLogs,
+    hasProxies: false,
+  );
+  globalState.updateTray(
+    appState: appState,
+    appFlowingState: appFlowingState,
+    config: config,
+    clashConfig: clashConfig,
+  );
+  await globalState.init(
+    appState: appState,
+    config: config,
+    clashConfig: clashConfig,
+  );
+  HttpOverrides.global = FlClashHttpOverrides();
+  runAppWithPreferences(
+    const Application(),
+    appState: appState,
+    appFlowingState: appFlowingState,
+    config: config,
+    clashConfig: clashConfig,
+  );
 }
 
 @pragma('vm:entry-point')

@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:fl_clash/clash/hub.dart';
+import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/clash/lib.dart';
+import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+
+import '../common/path.dart';
 
 class ClashCore {
   static ClashCore? _instance;
@@ -12,9 +17,9 @@ class ClashCore {
 
   ClashCore._internal() {
     if (Platform.isAndroid) {
-      clashInterface = ClashLib();
+      clashInterface = clashLib;
     } else {
-      clashInterface = ClashHub();
+      clashInterface = clashService;
     }
   }
 
@@ -23,8 +28,44 @@ class ClashCore {
     return _instance!;
   }
 
-  Future<bool> init(String homeDir) async {
-    return clashInterface.init(homeDir);
+  Future<void> _initGeo() async {
+    final homePath = await appPath.getHomeDirPath();
+    final homeDir = Directory(homePath);
+    final isExists = await homeDir.exists();
+    if (!isExists) {
+      await homeDir.create(recursive: true);
+    }
+    const geoFileNameList = [
+      mmdbFileName,
+      geoIpFileName,
+      geoSiteFileName,
+      asnFileName,
+    ];
+    try {
+      for (final geoFileName in geoFileNameList) {
+        final geoFile = File(
+          join(homePath, geoFileName),
+        );
+        final isExists = await geoFile.exists();
+        if (isExists) {
+          continue;
+        }
+        final data = await rootBundle.load('assets/data/$geoFileName');
+        List<int> bytes = data.buffer.asUint8List();
+        await geoFile.writeAsBytes(bytes, flush: true);
+      }
+    } catch (e) {
+      exit(0);
+    }
+  }
+
+  Future<bool> init({
+    required ClashConfig clashConfig,
+    required Config config,
+  }) async {
+    await _initGeo();
+    final homeDirPath = await appPath.getHomeDirPath();
+    return await clashInterface.init(homeDirPath);
   }
 
   shutdown() {}
@@ -40,8 +81,6 @@ class ClashCore {
     final completer = Completer<String>();
     return completer.future;
   }
-
-  initMessage() {}
 
   Future<List<Group>> getProxiesGroups() async {
     return [];

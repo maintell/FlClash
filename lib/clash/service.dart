@@ -1,53 +1,80 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/models/models.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
+import 'package:fl_clash/clash/interface.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/core.dart';
 import 'package:path/path.dart';
 
-import 'core.dart';
+import '../common/constant.dart';
 
-class ClashService {
-  Future<void> initGeo() async {
-    final homePath = await appPath.getHomeDirPath();
-    final homeDir = Directory(homePath);
-    final isExists = await homeDir.exists();
-    if (!isExists) {
-      await homeDir.create(recursive: true);
+class ClashService with ClashInterface {
+  static ClashService? _instance;
+
+  Completer<Socket> socketCompleter = Completer();
+
+  Completer<bool>? _initClashCompleter;
+
+  factory ClashService() {
+    _instance ??= ClashService._internal();
+    return _instance!;
+  }
+
+  ClashService._internal() {
+    _initCore();
+  }
+
+  _initCore() async {
+    String currentExecutablePath = Platform.resolvedExecutable;
+    Directory currentDirectory = Directory(dirname(currentExecutablePath));
+    final path = join(currentDirectory.path, "core");
+    final process = await Process.start(path, []);
+    final port = int.parse(
+      String.fromCharCodes(await process.stdout.first).trim(),
+    );
+    _connectCore(port);
+  }
+
+  _connectCore(int port) async {
+    if (socketCompleter.isCompleted) {
+      final socket = await socketCompleter.future;
+      await socket.close();
+      socketCompleter = Completer();
     }
-    const geoFileNameList = [
-      mmdbFileName,
-      geoIpFileName,
-      geoSiteFileName,
-      asnFileName,
-    ];
-    try {
-      for (final geoFileName in geoFileNameList) {
-        final geoFile = File(
-          join(homePath, geoFileName),
-        );
-        final isExists = await geoFile.exists();
-        if (isExists) {
-          continue;
-        }
-        final data = await rootBundle.load('assets/data/$geoFileName');
-        List<int> bytes = data.buffer.asUint8List();
-        await geoFile.writeAsBytes(bytes, flush: true);
-      }
-    } catch (e) {
-      debugPrint("$e");
-      exit(0);
+    final socket = await Socket.connect(localhost, port);
+    socketCompleter.complete(socket);
+    socket.listen((output) {
+      final data = String.fromCharCodes(output).trim();
+      _handleAction(
+        Action.fromJson(
+          json.decode(data),
+        ),
+      );
+    });
+  }
+
+  _handleAction(Action action) {
+    switch (action.method) {
+      case ActionMethod.initClash:
+        _initClashCompleter?.complete(action.data as bool);
+        break;
+      default:
+        break;
     }
   }
 
-  Future<bool> init({
-    required ClashConfig clashConfig,
-    required Config config,
-  }) async {
-    await initGeo();
-    final homeDirPath = await appPath.getHomeDirPath();
-    return await clashCore.init(homeDirPath);
+  @override
+  Future<bool> init(String homeDir) async {
+    final socket = await socketCompleter.future;
+    socket.writeln(
+      Action(
+        method: ActionMethod.initClash,
+        data: homeDir,
+      ).toJson(),
+    );
+    _initClashCompleter = Completer();
+    return _initClashCompleter!.future;
   }
 }
 

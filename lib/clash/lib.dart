@@ -22,6 +22,9 @@ class ClashLib with ClashInterface {
 
   ClashLib._internal() {
     lib = DynamicLibrary.open("libclash.so");
+    clashFFI.initMessage(
+      receiver.sendPort.nativePort,
+    );
   }
 
   factory ClashLib() {
@@ -79,12 +82,6 @@ class ClashLib with ClashInterface {
     );
     malloc.free(paramsChar);
     return completer.future;
-  }
-
-  initMessage() {
-    clashFFI.initMessage(
-      receiver.sendPort.nativePort,
-    );
   }
 
   Future<List<Group>> getProxiesGroups() {
@@ -372,3 +369,5 @@ class ClashLib with ClashInterface {
     clashFFI.closeConnections();
   }
 }
+
+final clashLib = ClashLib();
