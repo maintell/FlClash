@@ -5,65 +5,39 @@ package main
 */
 import "C"
 import (
-	"context"
 	bridge "core/dart-bridge"
-	"core/state"
 	"encoding/json"
-	"fmt"
-	"github.com/metacubex/mihomo/common/observable"
-	"github.com/metacubex/mihomo/common/utils"
 	"os"
 	"runtime"
 	"sort"
-	"sync"
-	"time"
 	"unsafe"
 
-	"github.com/metacubex/mihomo/adapter"
-	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/component/updater"
-	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
-	cp "github.com/metacubex/mihomo/constant/provider"
 	"github.com/metacubex/mihomo/hub/executor"
 	"github.com/metacubex/mihomo/log"
-	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
 )
-
-var (
-	configParams      = ConfigExtendedParams{}
-	externalProviders = map[string]cp.Provider{}
-	updateLock        sync.Mutex
-	logSubscriber     observable.Subscription[log.Event]
-)
-
-//export start
-func start() {
-	runLock.Lock()
-	defer runLock.Unlock()
-	isRunning = true
-}
-
-//export stop
-func stop() {
-	runLock.Lock()
-	go func() {
-		defer runLock.Unlock()
-		isRunning = false
-		stopListeners()
-	}()
-}
 
 //export initClash
 func initClash(homeDirStr *C.char) bool {
 	return handleInitClash(C.GoString(homeDirStr))
 }
 
+//export startListener
+func startListener() {
+	handleStartListener()
+}
+
+//export stopListener
+func stopListener() {
+	handleStopListener()
+}
+
 //export getIsInit
 func getIsInit() bool {
-	return isInit
+	return handleGetIsInit()
 }
 
 //export restartClash
@@ -84,10 +58,7 @@ func shutdownClash() bool {
 
 //export forceGc
 func forceGc() {
-	go func() {
-		log.Infoln("[APP] request force GC")
-		runtime.GC()
-	}()
+	handleForceGc()
 }
 
 //export validateConfig
@@ -95,217 +66,74 @@ func validateConfig(s *C.char, port C.longlong) {
 	i := int64(port)
 	bytes := []byte(C.GoString(s))
 	go func() {
-		_, err := config.UnmarshalRawConfig(bytes)
-		if err != nil {
-			bridge.SendToPort(i, err.Error())
-			return
-		}
-		bridge.SendToPort(i, "")
+		bridge.SendToPort(i, handleValidateConfig(bytes))
 	}()
 }
 
 //export updateConfig
 func updateConfig(s *C.char, port C.longlong) {
 	i := int64(port)
-	paramsString := C.GoString(s)
+	bytes := []byte(C.GoString(s))
 	go func() {
-		updateLock.Lock()
-		defer updateLock.Unlock()
-		var params = &GenerateConfigParams{}
-		err := json.Unmarshal([]byte(paramsString), params)
-		if err != nil {
-			bridge.SendToPort(i, err.Error())
-			return
-		}
-		configParams = params.Params
-		prof := decorationConfig(params.ProfileId, params.Config)
-		state.CurrentRawConfig = prof
-		err = applyConfig()
-		if err != nil {
-			bridge.SendToPort(i, err.Error())
-			return
-		}
-		bridge.SendToPort(i, "")
+		bridge.SendToPort(i, handleUpdateConfig(bytes))
 	}()
 }
 
 //export clearEffect
 func clearEffect(s *C.char) {
 	id := C.GoString(s)
-	go func() {
-		_ = removeFile(getProfilePath(id))
-		_ = removeFile(getProfileProvidersPath(id))
-	}()
+	handleClearEffect(id)
 }
 
 //export getProxies
 func getProxies() *C.char {
-	data, err := json.Marshal(tunnel.ProxiesWithProviders())
-	if err != nil {
-		return C.CString("")
-	}
-	return C.CString(string(data))
+	return C.CString(handleGetProxies())
 }
 
 //export changeProxy
 func changeProxy(s *C.char) {
 	paramsString := C.GoString(s)
-	var params = &ChangeProxyParams{}
-	err := json.Unmarshal([]byte(paramsString), params)
-	if err != nil {
-		log.Infoln("Unmarshal ChangeProxyParams %v", err)
-	}
-	groupName := *params.GroupName
-	proxyName := *params.ProxyName
-	proxies := tunnel.ProxiesWithProviders()
-	group, ok := proxies[groupName]
-	if !ok {
-		return
-	}
-	adapterProxy := group.(*adapter.Proxy)
-	selector, ok := adapterProxy.ProxyAdapter.(outboundgroup.SelectAble)
-	if !ok {
-		return
-	}
-	if proxyName == "" {
-		selector.ForceSet(proxyName)
-	} else {
-		err = selector.Set(proxyName)
-	}
-	if err == nil {
-		log.Infoln("[SelectAble] %s selected %s", groupName, proxyName)
-	}
+	handleChangeProxy(paramsString)
 }
 
 //export getTraffic
 func getTraffic() *C.char {
-	up, down := statistic.DefaultManager.Current(state.CurrentState.OnlyProxy)
-	traffic := map[string]int64{
-		"up":   up,
-		"down": down,
-	}
-	data, err := json.Marshal(traffic)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return C.CString("")
-	}
-	return C.CString(string(data))
+	return C.CString(handleGetTraffic())
 }
 
 //export getTotalTraffic
 func getTotalTraffic() *C.char {
-	up, down := statistic.DefaultManager.Total(state.CurrentState.OnlyProxy)
-	traffic := map[string]int64{
-		"up":   up,
-		"down": down,
-	}
-	data, err := json.Marshal(traffic)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return C.CString("")
-	}
-	return C.CString(string(data))
+	return C.CString(handleGetTotalTraffic())
 }
 
 //export resetTraffic
 func resetTraffic() {
-	statistic.DefaultManager.ResetStatistic()
+	handleResetTraffic()
 }
 
 //export asyncTestDelay
 func asyncTestDelay(s *C.char, port C.longlong) {
 	i := int64(port)
 	paramsString := C.GoString(s)
-	b.Go(paramsString, func() (bool, error) {
-		var params = &TestDelayParams{}
-		err := json.Unmarshal([]byte(paramsString), params)
-		if err != nil {
-			bridge.SendToPort(i, "")
-			return false, nil
-		}
-
-		expectedStatus, err := utils.NewUnsignedRanges[uint16]("")
-		if err != nil {
-			bridge.SendToPort(i, "")
-			return false, nil
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
-		defer cancel()
-
-		proxies := tunnel.ProxiesWithProviders()
-		proxy := proxies[params.ProxyName]
-
-		delayData := &Delay{
-			Name: params.ProxyName,
-		}
-
-		if proxy == nil {
-			delayData.Value = -1
-			data, _ := json.Marshal(delayData)
-			bridge.SendToPort(i, string(data))
-			return false, nil
-		}
-
-		delay, err := proxy.URLTest(ctx, constant.DefaultTestURL, expectedStatus)
-		if err != nil || delay == 0 {
-			delayData.Value = -1
-			data, _ := json.Marshal(delayData)
-			bridge.SendToPort(i, string(data))
-			return false, nil
-		}
-
-		delayData.Value = int32(delay)
-		data, _ := json.Marshal(delayData)
-		bridge.SendToPort(i, string(data))
-		return false, nil
+	handleAsyncTestDelay(paramsString, func(value string) {
+		bridge.SendToPort(i, value)
 	})
-}
-
-//export getVersionInfo
-func getVersionInfo() *C.char {
-	versionInfo := map[string]string{
-		"clashName": constant.Name,
-		"version":   "1.18.5",
-	}
-	data, err := json.Marshal(versionInfo)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return C.CString("")
-	}
-	return C.CString(string(data))
 }
 
 //export getConnections
 func getConnections() *C.char {
-	snapshot := statistic.DefaultManager.Snapshot()
-	data, err := json.Marshal(snapshot)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return C.CString("")
-	}
-	return C.CString(string(data))
+	return C.CString(handleGetConnections())
 }
 
 //export closeConnections
 func closeConnections() {
-	statistic.DefaultManager.Range(func(c statistic.Tracker) bool {
-		err := c.Close()
-		if err != nil {
-			return false
-		}
-		return true
-	})
+	handleCloseConnections()
 }
 
 //export closeConnection
 func closeConnection(id *C.char) {
 	connectionId := C.GoString(id)
-	c := statistic.DefaultManager.Get(connectionId)
-	if c == nil {
-		return
-	}
-	_ = c.Close()
+	handleCloseConnection(connectionId)
 }
 
 //export getExternalProviders

@@ -59,11 +59,16 @@ func handleAction(action *Action) {
 	switch action.Method {
 	case initClashMethod:
 		data := action.Data.(string)
-		res, _ := Action{
+		Action{
 			Method: initClashMethod,
 			Data:   handleInitClash(data),
-		}.Json()
-		_, _ = conn.Write(res)
+		}.send()
+		return
+	case getIsInitMethod:
+		handleGetIsInit()
+		return
+	case forceGcMethod:
+		handleForceGc()
 		return
 	}
 }

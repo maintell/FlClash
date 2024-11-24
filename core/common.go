@@ -359,6 +359,7 @@ func patchConfig(general *config.General, controller *config.Controller, tls *co
 }
 
 func updateListeners(general *config.General, listeners map[string]constant.InboundListener) {
+	b.Wait()
 	if !isRunning {
 		return
 	}
