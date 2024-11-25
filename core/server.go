@@ -70,5 +70,81 @@ func handleAction(action *Action) {
 	case forceGcMethod:
 		handleForceGc()
 		return
+	case validateConfigMethod:
+		data := []byte(action.Data.(string))
+		Action{
+			Method: validateConfigMethod,
+			Data:   handleValidateConfig(data),
+		}.send()
+		return
+	case updateConfigMethod:
+		data := []byte(action.Data.(string))
+		Action{
+			Method: updateConfigMethod,
+			Data:   handleUpdateConfig(data),
+		}.send()
+		return
+	case clearEffectMethod:
+		id := action.Data.(string)
+		handleClearEffect(id)
+		return
+	case getProxiesMethod:
+		Action{
+			Method: getProxiesMethod,
+			Data:   handleGetProxies(),
+		}.send()
+		return
+	case changeProxyMethod:
+		data := action.Data.(string)
+		handleChangeProxy(data)
+		return
+	case getTrafficMethod:
+		Action{
+			Method: getTrafficMethod,
+			Data:   handleGetTraffic(),
+		}.send()
+		return
+	case getTotalTrafficMethod:
+		Action{
+			Method: getTotalTrafficMethod,
+			Data:   handleGetExternalProviders(),
+		}.send()
+		return
+	case resetTrafficMethod:
+		handleResetTraffic()
+		return
+	case asyncTestDelayMethod:
+		data := action.Data.(string)
+		handleAsyncTestDelay(data, func(value string) {
+			Action{
+				Method: asyncTestDelayMethod,
+				Data:   value,
+			}.send()
+		})
+		return
+	case getConnectionsMethod:
+		Action{
+			Method: getConnectionsMethod,
+			Data:   handleGetConnections(),
+		}.send()
+		return
+	case closeConnectionsMethod:
+		handleCloseConnections()
+		return
+	case closeConnectionMethod:
+		id := action.Data.(string)
+		handleCloseConnection(id)
+		return
+	case getExternalProvidersMethod:
+	case getExternalProviderMethod:
+	case updateGeoDataMethod:
+	case updateExternalProviderMethod:
+	case sideLoadExternalProviderMethod:
+	case startLogMethod:
+		handleStartLog()
+		return
+	case stopLogMethod:
+		handleStopLog()
+		return
 	}
 }

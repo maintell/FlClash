@@ -19,8 +19,8 @@ type Process struct {
 }
 
 var (
-	Port        int64
-	ServicePort int64
+	Port        int64 = -1
+	ServicePort int64 = -1
 )
 
 const (
@@ -47,6 +47,12 @@ func SendMessage(message Message) {
 	s, err := message.Json()
 	if err != nil {
 		return
+	}
+	if Port == -1 && ServicePort == -1 {
+		Action{
+			Method: messageMethod,
+			Data:   s,
+		}.send()
 	}
 	if handler, ok := messageHandlers[message.Type]; ok {
 		handler(s)

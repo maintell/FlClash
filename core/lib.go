@@ -6,19 +6,28 @@ package main
 import "C"
 import (
 	bridge "core/dart-bridge"
-	"encoding/json"
 	"os"
 	"runtime"
-	"sort"
 	"unsafe"
 
-	"github.com/metacubex/mihomo/adapter/provider"
-	"github.com/metacubex/mihomo/component/updater"
-	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/hub/executor"
-	"github.com/metacubex/mihomo/log"
-	"github.com/metacubex/mihomo/tunnel/statistic"
 )
+
+//export initNativeApiBridge
+func initNativeApiBridge(api unsafe.Pointer) {
+	bridge.InitDartApi(api)
+}
+
+//export initMessage
+func initMessage(port C.longlong) {
+	i := int64(port)
+	Port = i
+}
+
+//export freeCString
+func freeCString(s *C.char) {
+	C.free(unsafe.Pointer(s))
+}
 
 //export initClash
 func initClash(homeDirStr *C.char) bool {
@@ -138,23 +147,7 @@ func closeConnection(id *C.char) {
 
 //export getExternalProviders
 func getExternalProviders() *C.char {
-	runLock.Lock()
-	defer runLock.Unlock()
-	externalProviders = getExternalProvidersRaw()
-	eps := make([]ExternalProvider, 0)
-	for _, p := range externalProviders {
-		externalProvider, err := toExternalProvider(p)
-		if err != nil {
-			continue
-		}
-		eps = append(eps, *externalProvider)
-	}
-	sort.Sort(ExternalProviders(eps))
-	data, err := json.Marshal(eps)
-	if err != nil {
-		return C.CString("")
-	}
-	return C.CString(string(data))
+	return C.CString(handleGetExternalProviders())
 }
 
 //export getExternalProvider
@@ -162,167 +155,44 @@ func getExternalProvider(name *C.char) *C.char {
 	runLock.Lock()
 	defer runLock.Unlock()
 	externalProviderName := C.GoString(name)
-	externalProvider, exist := externalProviders[externalProviderName]
-	if !exist {
-		return C.CString("")
-	}
-	e, err := toExternalProvider(externalProvider)
-	if err != nil {
-		return C.CString("")
-	}
-	data, err := json.Marshal(e)
-	if err != nil {
-		return C.CString("")
-	}
-	return C.CString(string(data))
+	return C.CString(handleGetExternalProvider(externalProviderName))
 }
 
 //export updateGeoData
-func updateGeoData(geoType *C.char, geoName *C.char, port C.longlong) {
+func updateGeoData(geoTypeChar *C.char, geoNameChar *C.char, port C.longlong) {
 	i := int64(port)
-	geoTypeString := C.GoString(geoType)
-	geoNameString := C.GoString(geoName)
-	go func() {
-		path := constant.Path.Resolve(geoNameString)
-		switch geoTypeString {
-		case "MMDB":
-			err := updater.UpdateMMDBWithPath(path)
-			if err != nil {
-				bridge.SendToPort(i, err.Error())
-				return
-			}
-		case "ASN":
-			err := updater.UpdateASNWithPath(path)
-			if err != nil {
-				bridge.SendToPort(i, err.Error())
-				return
-			}
-		case "GeoIp":
-			err := updater.UpdateGeoIpWithPath(path)
-			if err != nil {
-				bridge.SendToPort(i, err.Error())
-				return
-			}
-		case "GeoSite":
-			err := updater.UpdateGeoSiteWithPath(path)
-			if err != nil {
-				bridge.SendToPort(i, err.Error())
-				return
-			}
-		}
-		bridge.SendToPort(i, "")
-	}()
+	geoTypeString := C.GoString(geoTypeChar)
+	geoNameString := C.GoString(geoNameChar)
+	handleUpdateGeoData(geoTypeString, geoNameString, func(value string) {
+		bridge.SendToPort(i, value)
+	})
 }
 
 //export updateExternalProvider
-func updateExternalProvider(providerName *C.char, port C.longlong) {
+func updateExternalProvider(providerNameChar *C.char, port C.longlong) {
 	i := int64(port)
-	providerNameString := C.GoString(providerName)
-	go func() {
-		externalProvider, exist := externalProviders[providerNameString]
-		if !exist {
-			bridge.SendToPort(i, "external provider is not exist")
-			return
-		}
-		err := externalProvider.Update()
-		if err != nil {
-			bridge.SendToPort(i, err.Error())
-			return
-		}
-		bridge.SendToPort(i, "")
-	}()
+	providerName := C.GoString(providerNameChar)
+	handleUpdateExternalProvider(providerName, func(value string) {
+		bridge.SendToPort(i, value)
+	})
 }
 
 //export sideLoadExternalProvider
-func sideLoadExternalProvider(providerName *C.char, data *C.char, port C.longlong) {
+func sideLoadExternalProvider(providerNameChar *C.char, dataChar *C.char, port C.longlong) {
 	i := int64(port)
-	bytes := []byte(C.GoString(data))
-	providerNameString := C.GoString(providerName)
-	go func() {
-		externalProvider, exist := externalProviders[providerNameString]
-		if !exist {
-			bridge.SendToPort(i, "external provider is not exist")
-			return
-		}
-		err := sideUpdateExternalProvider(externalProvider, bytes)
-		if err != nil {
-			bridge.SendToPort(i, err.Error())
-			return
-		}
-		bridge.SendToPort(i, "")
-	}()
-}
-
-//export initNativeApiBridge
-func initNativeApiBridge(api unsafe.Pointer) {
-	bridge.InitDartApi(api)
-}
-
-//export initMessage
-func initMessage(port C.longlong) {
-	i := int64(port)
-	Port = i
-}
-
-//export freeCString
-func freeCString(s *C.char) {
-	C.free(unsafe.Pointer(s))
+	providerName := C.GoString(providerNameChar)
+	data := []byte(C.GoString(dataChar))
+	handleSideLoadExternalProvider(providerName, data, func(value string) {
+		bridge.SendToPort(i, value)
+	})
 }
 
 //export startLog
 func startLog() {
-	if logSubscriber != nil {
-		log.UnSubscribe(logSubscriber)
-		logSubscriber = nil
-	}
-	logSubscriber = log.Subscribe()
-	go func() {
-		for logData := range logSubscriber {
-			if logData.LogLevel < log.Level() {
-				continue
-			}
-			message := &Message{
-				Type: LogMessage,
-				Data: logData,
-			}
-			SendMessage(*message)
-		}
-	}()
+	handleStartLog()
 }
 
 //export stopLog
 func stopLog() {
-	if logSubscriber != nil {
-		log.UnSubscribe(logSubscriber)
-		logSubscriber = nil
-	}
-}
-
-func init() {
-	provider.HealthcheckHook = func(name string, delay uint16) {
-		delayData := &Delay{
-			Name: name,
-		}
-		if delay == 0 {
-			delayData.Value = -1
-		} else {
-			delayData.Value = int32(delay)
-		}
-		SendMessage(Message{
-			Type: DelayMessage,
-			Data: delayData,
-		})
-	}
-	statistic.DefaultRequestNotify = func(c statistic.Tracker) {
-		SendMessage(Message{
-			Type: RequestMessage,
-			Data: c,
-		})
-	}
-	executor.DefaultProviderLoadedHook = func(providerName string) {
-		SendMessage(Message{
-			Type: LoadedMessage,
-			Data: providerName,
-		})
-	}
+	handleStopLog()
 }

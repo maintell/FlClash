@@ -3,9 +3,29 @@ package main
 import "encoding/json"
 
 const (
-	initClashMethod = `json:"initClash"`
-	getIsInitMethod = `json:"getIsInit"`
-	forceGcMethod   = `json:"forceGc"`
+	messageMethod                  = `json:"message"`
+	initClashMethod                = `json:"initClash"`
+	getIsInitMethod                = `json:"getIsInit"`
+	forceGcMethod                  = `json:"forceGc"`
+	validateConfigMethod           = `json:"validateConfig"`
+	updateConfigMethod             = `json:"updateConfig"`
+	clearEffectMethod              = `json:"clearEffect"`
+	getProxiesMethod               = `json:"getProxies"`
+	changeProxyMethod              = `json:"changeProxy"`
+	getTrafficMethod               = `json:"getTraffic"`
+	getTotalTrafficMethod          = `json:"getTotalTraffic"`
+	resetTrafficMethod             = `json:"resetTraffic"`
+	asyncTestDelayMethod           = `json:"asyncTestDelay"`
+	getConnectionsMethod           = `json:"getConnections"`
+	closeConnectionsMethod         = `json:"closeConnections"`
+	closeConnectionMethod          = `json:"closeConnection"`
+	getExternalProvidersMethod     = `json:"getExternalProviders"`
+	getExternalProviderMethod      = `json:"getExternalProvider"`
+	updateGeoDataMethod            = `json:"updateGeoData"`
+	updateExternalProviderMethod   = `json:"updateExternalProvider"`
+	sideLoadExternalProviderMethod = `json:"sideLoadExternalProvider"`
+	startLogMethod                 = `json:"startLog"`
+	stopLogMethod                  = `json:"stopLog"`
 )
 
 type Method string
@@ -20,10 +40,17 @@ func (action Action) Json() ([]byte, error) {
 	return data, err
 }
 
-func (action Action) send() {
+func (action Action) send() bool {
 	if conn == nil {
-		return
+		return false
 	}
-	res, _ := action.Json()
-	_, _ = conn.Write(res)
+	res, err := action.Json()
+	if err != nil {
+		return false
+	}
+	_, err = conn.Write(res)
+	if err != nil {
+		return false
+	}
+	return true
 }
