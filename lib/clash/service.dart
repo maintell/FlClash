@@ -329,9 +329,13 @@ class ClashService with ClashInterface {
 
   @override
   Future<String> asyncTestDelay(String proxyName) {
+    final delayParams = {
+      "proxy-name": proxyName,
+      "timeout": httpTimeoutDuration.inMilliseconds,
+    };
     return _invoke<String>(
       method: ActionMethod.asyncTestDelay,
-      data: proxyName,
+      data: json.encode(delayParams),
     );
   }
 }
