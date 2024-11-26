@@ -6,11 +6,7 @@ package main
 import "C"
 import (
 	bridge "core/dart-bridge"
-	"os"
-	"runtime"
 	"unsafe"
-
-	"github.com/metacubex/mihomo/hub/executor"
 )
 
 //export initNativeApiBridge
@@ -49,20 +45,9 @@ func getIsInit() bool {
 	return handleGetIsInit()
 }
 
-//export restartClash
-func restartClash() bool {
-	execPath, _ := os.Executable()
-	go restartExecutable(execPath)
-	return true
-}
-
 //export shutdownClash
 func shutdownClash() bool {
-	stopListeners()
-	executor.Shutdown()
-	runtime.GC()
-	isInit = false
-	return true
+	return handleShutdown()
 }
 
 //export forceGc
@@ -88,21 +73,15 @@ func updateConfig(s *C.char, port C.longlong) {
 	}()
 }
 
-//export clearEffect
-func clearEffect(s *C.char) {
-	id := C.GoString(s)
-	handleClearEffect(id)
-}
-
 //export getProxies
 func getProxies() *C.char {
 	return C.CString(handleGetProxies())
 }
 
 //export changeProxy
-func changeProxy(s *C.char) {
+func changeProxy(s *C.char) bool {
 	paramsString := C.GoString(s)
-	handleChangeProxy(paramsString)
+	return handleChangeProxy(paramsString)
 }
 
 //export getTraffic

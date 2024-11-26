@@ -180,5 +180,27 @@ enum RouteMode {
 }
 
 enum ActionMethod {
+  message,
   initClash,
+  getIsInit,
+  forceGc,
+  shutdown,
+  validateConfig,
+  updateConfig,
+  getProxies,
+  changeProxy,
+  getTraffic,
+  getTotalTraffic,
+  resetTraffic,
+  asyncTestDelay,
+  getConnections,
+  closeConnections,
+  closeConnection,
+  getExternalProviders,
+  getExternalProvider,
+  updateGeoData,
+  updateExternalProvider,
+  sideLoadExternalProvider,
+  startLog,
+  stopLog,
 }

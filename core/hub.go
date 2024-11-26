@@ -66,6 +66,14 @@ func handleForceGc() {
 	}()
 }
 
+func handleShutdown() bool {
+	stopListeners()
+	executor.Shutdown()
+	runtime.GC()
+	isInit = false
+	return true
+}
+
 func handleValidateConfig(bytes []byte) string {
 	_, err := config.UnmarshalRawConfig(bytes)
 	if err != nil {
@@ -92,13 +100,6 @@ func handleUpdateConfig(bytes []byte) string {
 	return ""
 }
 
-func handleClearEffect(id string) {
-	go func() {
-		_ = removeFile(getProfilePath(id))
-		_ = removeFile(getProfileProvidersPath(id))
-	}()
-}
-
 func handleGetProxies() string {
 	runLock.Lock()
 	defer runLock.Unlock()
@@ -109,7 +110,7 @@ func handleGetProxies() string {
 	return string(data)
 }
 
-func handleChangeProxy(data string) {
+func handleChangeProxy(data string) bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	var params = &ChangeProxyParams{}
@@ -122,12 +123,12 @@ func handleChangeProxy(data string) {
 	proxies := tunnel.ProxiesWithProviders()
 	group, ok := proxies[groupName]
 	if !ok {
-		return
+		return false
 	}
 	adapterProxy := group.(*adapter.Proxy)
 	selector, ok := adapterProxy.ProxyAdapter.(outboundgroup.SelectAble)
 	if !ok {
-		return
+		return false
 	}
 	if proxyName == "" {
 		selector.ForceSet(proxyName)
@@ -136,7 +137,9 @@ func handleChangeProxy(data string) {
 	}
 	if err == nil {
 		log.Infoln("[SelectAble] %s selected %s", groupName, proxyName)
+		return false
 	}
+	return true
 }
 
 func handleGetTraffic() string {

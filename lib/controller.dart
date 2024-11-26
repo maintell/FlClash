@@ -98,7 +98,7 @@ class AppController {
 
   deleteProfile(String id) async {
     config.deleteProfileById(id);
-    clashCore.clearEffect(id);
+    clearEffect(id);
     if (config.currentProfileId == id) {
       if (config.profiles.isNotEmpty) {
         final updateId = config.profiles.first.id;
@@ -209,8 +209,8 @@ class AppController {
   changeProxy({
     required String groupName,
     required String proxyName,
-  }) {
-    globalState.changeProxy(
+  }) async {
+    await globalState.changeProxy(
       config: config,
       groupName: groupName,
       proxyName: proxyName,
@@ -519,6 +519,19 @@ class AppController {
     return group?.getCurrentSelectedName(
             config.currentSelectedMap[groupName] ?? '') ??
         '';
+  }
+
+  clearEffect(String profileId) async {
+    final profilePath = await appPath.getProfilePath(profileId);
+    final providersPath = await appPath.getProvidersPath(profileId);
+    return await Isolate.run(() async {
+      if (profilePath != null) {
+        await File(profilePath).delete(recursive: true);
+      }
+      if (providersPath != null) {
+        await File(providersPath).delete(recursive: true);
+      }
+    });
   }
 
   updateTun() {

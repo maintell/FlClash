@@ -302,5 +302,27 @@ Map<String, dynamic> _$$ActionImplToJson(_$ActionImpl instance) =>
     };
 
 const _$ActionMethodEnumMap = {
+  ActionMethod.message: 'message',
   ActionMethod.initClash: 'initClash',
+  ActionMethod.getIsInit: 'getIsInit',
+  ActionMethod.forceGc: 'forceGc',
+  ActionMethod.shutdown: 'shutdown',
+  ActionMethod.validateConfig: 'validateConfig',
+  ActionMethod.updateConfig: 'updateConfig',
+  ActionMethod.getProxies: 'getProxies',
+  ActionMethod.changeProxy: 'changeProxy',
+  ActionMethod.getTraffic: 'getTraffic',
+  ActionMethod.getTotalTraffic: 'getTotalTraffic',
+  ActionMethod.resetTraffic: 'resetTraffic',
+  ActionMethod.asyncTestDelay: 'asyncTestDelay',
+  ActionMethod.getConnections: 'getConnections',
+  ActionMethod.closeConnections: 'closeConnections',
+  ActionMethod.closeConnection: 'closeConnection',
+  ActionMethod.getExternalProviders: 'getExternalProviders',
+  ActionMethod.getExternalProvider: 'getExternalProvider',
+  ActionMethod.updateGeoData: 'updateGeoData',
+  ActionMethod.updateExternalProvider: 'updateExternalProvider',
+  ActionMethod.sideLoadExternalProvider: 'sideLoadExternalProvider',
+  ActionMethod.startLog: 'startLog',
+  ActionMethod.stopLog: 'stopLog',
 };

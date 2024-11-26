@@ -74,6 +74,12 @@ func handleAction(action *Action) {
 	case forceGcMethod:
 		handleForceGc()
 		return
+	case shutdownMethod:
+		Action{
+			Method: shutdownMethod,
+			Data:   handleShutdown(),
+		}.send()
+		return
 	case validateConfigMethod:
 		data := []byte(action.Data.(string))
 		Action{
@@ -88,10 +94,6 @@ func handleAction(action *Action) {
 			Data:   handleUpdateConfig(data),
 		}.send()
 		return
-	case clearEffectMethod:
-		id := action.Data.(string)
-		handleClearEffect(id)
-		return
 	case getProxiesMethod:
 		Action{
 			Method: getProxiesMethod,
@@ -100,7 +102,10 @@ func handleAction(action *Action) {
 		return
 	case changeProxyMethod:
 		data := action.Data.(string)
-		handleChangeProxy(data)
+		Action{
+			Method: changeProxyMethod,
+			Data:   handleChangeProxy(data),
+		}.send()
 		return
 	case getTrafficMethod:
 		Action{

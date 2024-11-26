@@ -6,7 +6,6 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 import 'package:fl_clash/common/constant.dart';
-import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 
 import 'generated/clash_ffi.dart';
@@ -33,20 +32,23 @@ class ClashLib with ClashInterface {
   }
 
   @override
-  Future<bool> init(String homeDir) async {
+  bool init(String homeDir) {
     final homeDirChar = homeDir.toNativeUtf8().cast<Char>();
     final isInit = clashFFI.initClash(homeDirChar) == 1;
     malloc.free(homeDirChar);
     return isInit;
   }
 
-  shutdown() {
+  @override
+  shutdown() async {
     clashFFI.shutdownClash();
     lib.close();
   }
 
+  @override
   bool get isInit => clashFFI.getIsInit() == 1;
 
+  @override
   Future<String> validateConfig(String data) {
     final completer = Completer<String>();
     final receiver = ReceivePort();
@@ -65,6 +67,7 @@ class ClashLib with ClashInterface {
     return completer.future;
   }
 
+  @override
   Future<String> updateConfig(UpdateConfigParams updateConfigParams) {
     final completer = Completer<String>();
     final receiver = ReceivePort();
@@ -84,56 +87,25 @@ class ClashLib with ClashInterface {
     return completer.future;
   }
 
-  Future<List<Group>> getProxiesGroups() {
+  @override
+  String getProxies() {
     final proxiesRaw = clashFFI.getProxies();
     final proxiesRawString = proxiesRaw.cast<Utf8>().toDartString();
     clashFFI.freeCString(proxiesRaw);
-    return Isolate.run<List<Group>>(() {
-      if (proxiesRawString.isEmpty) return [];
-      final proxies = (json.decode(proxiesRawString) ?? {}) as Map;
-      if (proxies.isEmpty) return [];
-      final groupNames = [
-        UsedProxy.GLOBAL.name,
-        ...(proxies[UsedProxy.GLOBAL.name]["all"] as List).where((e) {
-          final proxy = proxies[e] ?? {};
-          return GroupTypeExtension.valueList.contains(proxy['type']);
-        })
-      ];
-      final groupsRaw = groupNames.map((groupName) {
-        final group = proxies[groupName];
-        group["all"] = ((group["all"] ?? []) as List)
-            .map(
-              (name) => proxies[name],
-            )
-            .where((proxy) => proxy != null)
-            .toList();
-        return group;
-      }).toList();
-      return groupsRaw
-          .map(
-            (e) => Group.fromJson(e),
-          )
-          .toList();
-    });
+    return proxiesRawString;
   }
 
-  Future<List<ExternalProvider>> getExternalProviders() {
+  @override
+  String getExternalProviders() {
     final externalProvidersRaw = clashFFI.getExternalProviders();
     final externalProvidersRawString =
         externalProvidersRaw.cast<Utf8>().toDartString();
     clashFFI.freeCString(externalProvidersRaw);
-    return Isolate.run<List<ExternalProvider>>(() {
-      final externalProviders =
-          (json.decode(externalProvidersRawString) as List<dynamic>)
-              .map(
-                (item) => ExternalProvider.fromJson(item),
-              )
-              .toList();
-      return externalProviders;
-    });
+    return externalProvidersRawString;
   }
 
-  ExternalProvider? getExternalProvider(String externalProviderName) {
+  @override
+  String? getExternalProvider(String externalProviderName) {
     final externalProviderNameChar =
         externalProviderName.toNativeUtf8().cast<Char>();
     final externalProviderRaw =
@@ -143,9 +115,10 @@ class ClashLib with ClashInterface {
         externalProviderRaw.cast<Utf8>().toDartString();
     clashFFI.freeCString(externalProviderRaw);
     if (externalProviderRawString.isEmpty) return null;
-    return ExternalProvider.fromJson(json.decode(externalProviderRawString));
+    return externalProviderRawString;
   }
 
+  @override
   Future<String> updateGeoData({
     required String geoType,
     required String geoName,
@@ -170,6 +143,7 @@ class ClashLib with ClashInterface {
     return completer.future;
   }
 
+  @override
   Future<String> sideLoadExternalProvider({
     required String providerName,
     required String data,
@@ -194,6 +168,7 @@ class ClashLib with ClashInterface {
     return completer.future;
   }
 
+  @override
   Future<String> updateExternalProvider({
     required String providerName,
   }) {
@@ -214,22 +189,24 @@ class ClashLib with ClashInterface {
     return completer.future;
   }
 
+  @override
   changeProxy(ChangeProxyParams changeProxyParams) {
     final params = json.encode(changeProxyParams);
     final paramsChar = params.toNativeUtf8().cast<Char>();
-    clashFFI.changeProxy(paramsChar);
+    final res = clashFFI.changeProxy(paramsChar);
     malloc.free(paramsChar);
+    return res == 1;
   }
 
-  start() {
-    clashFFI.start();
+  startListener() {
+    clashFFI.startListener();
   }
 
-  stop() {
-    clashFFI.stop();
+  stopListener() {
+    clashFFI.stopListener();
   }
 
-  Future<Delay> getDelay(String proxyName) {
+  Future<Delay> asyncTestDelay(String proxyName) {
     final delayParams = {
       "proxy-name": proxyName,
       "timeout": httpTimeoutDuration.inMilliseconds,
@@ -250,19 +227,6 @@ class ClashLib with ClashInterface {
     );
     malloc.free(delayParamsChar);
     return completer.future;
-  }
-
-  clearEffect(String profileId) {
-    final profileIdChar = profileId.toNativeUtf8().cast<Char>();
-    clashFFI.clearEffect(profileIdChar);
-    malloc.free(profileIdChar);
-  }
-
-  VersionInfo getVersionInfo() {
-    final versionInfoRaw = clashFFI.getVersionInfo();
-    final versionInfo = json.decode(versionInfoRaw.cast<Utf8>().toDartString());
-    clashFFI.freeCString(versionInfoRaw);
-    return VersionInfo.fromJson(versionInfo);
   }
 
   setState(CoreState state) {
@@ -323,7 +287,8 @@ class ClashLib with ClashInterface {
     malloc.free(dnsChar);
   }
 
-  requestGc() {
+  @override
+  forceGc() {
     clashFFI.forceGc();
   }
 

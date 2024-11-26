@@ -13,34 +13,17 @@ class AppPath {
   Completer<Directory> tempDir = Completer();
   late String appDirPath;
 
-  // Future<Directory> _createDesktopCacheDir() async {
-  //   final dir = Directory(path);
-  //   if (await dir.exists()) {
-  //     await dir.create(recursive: true);
-  //   }
-  //   return dir;
-  // }
-
   AppPath._internal() {
     appDirPath = join(dirname(Platform.resolvedExecutable));
     getApplicationSupportDirectory().then((value) {
       dataDir.complete(value);
     });
-    getTemporaryDirectory().then((value){
-     tempDir.complete(value);
+    getTemporaryDirectory().then((value) {
+      tempDir.complete(value);
     });
     getDownloadsDirectory().then((value) {
       downloadDir.complete(value);
     });
-    // if (Platform.isAndroid) {
-    //   getApplicationSupportDirectory().then((value) {
-    //     cacheDir.complete(value);
-    //   });
-    // } else {
-    //   _createDesktopCacheDir().then((value) {
-    //     cacheDir.complete(value);
-    //   });
-    // }
   }
 
   factory AppPath() {
@@ -67,6 +50,12 @@ class AppPath {
     if (id == null) return null;
     final directory = await getProfilesPath();
     return join(directory, "$id.yaml");
+  }
+
+  Future<String?> getProvidersPath(String? id) async {
+    if (id == null) return null;
+    final directory = await getProfilesPath();
+    return join(directory, "providers", id);
   }
 
   Future<String> get tempPath async {

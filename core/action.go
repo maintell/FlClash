@@ -7,9 +7,9 @@ const (
 	initClashMethod                = `json:"initClash"`
 	getIsInitMethod                = `json:"getIsInit"`
 	forceGcMethod                  = `json:"forceGc"`
+	shutdownMethod                 = `json:"shutdown"`
 	validateConfigMethod           = `json:"validateConfig"`
 	updateConfigMethod             = `json:"updateConfig"`
-	clearEffectMethod              = `json:"clearEffect"`
 	getProxiesMethod               = `json:"getProxies"`
 	changeProxyMethod              = `json:"changeProxy"`
 	getTrafficMethod               = `json:"getTraffic"`

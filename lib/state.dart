@@ -70,7 +70,7 @@ class GlobalState {
   }
 
   handleStart() async {
-    clashCore.start();
+    await clashCore.startListener();
     if (globalState.isVpnService) {
       await vpn?.startVpn();
       startListenUpdate();
@@ -86,7 +86,7 @@ class GlobalState {
   }
 
   Future handleStop() async {
-    clashCore.stop();
+    await clashCore.stopListener();
     if (Platform.isAndroid) {
       clashCore.stopTun();
     }
@@ -119,7 +119,7 @@ class GlobalState {
     required Config config,
     required ClashConfig clashConfig,
   }) async {
-    appState.isInit = clashCore.isInit;
+    appState.isInit = await clashCore.isInit;
     if (!appState.isInit) {
       appState.isInit = await clashCore.init(
         config: config,
@@ -193,8 +193,8 @@ class GlobalState {
     required Config config,
     required String groupName,
     required String proxyName,
-  }) {
-    clashCore.changeProxy(
+  }) async {
+    await clashCore.changeProxy(
       ChangeProxyParams(
         groupName: groupName,
         proxyName: proxyName,

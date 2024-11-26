@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/clash/lib.dart';
 import 'package:fl_clash/common/constant.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
@@ -68,38 +71,86 @@ class ClashCore {
     return await clashInterface.init(homeDirPath);
   }
 
-  shutdown() {}
-
-  bool get isInit => false;
-
-  Future<String> validateConfig(String data) {
-    final completer = Completer<String>();
-    return completer.future;
+  shutdown() async {
+    await clashInterface.shutdown();
   }
 
-  Future<String> updateConfig(UpdateConfigParams updateConfigParams) {
-    final completer = Completer<String>();
-    return completer.future;
+  FutureOr<bool> get isInit => clashInterface.isInit;
+
+  FutureOr<String> validateConfig(String data) {
+    return clashInterface.validateConfig(data);
+  }
+
+  FutureOr<String> updateConfig(UpdateConfigParams updateConfigParams) {
+    return clashInterface.updateConfig(updateConfigParams);
   }
 
   Future<List<Group>> getProxiesGroups() async {
-    return [];
+    final proxiesRawString = await clashInterface.getProxies();
+    return Isolate.run<List<Group>>(() {
+      if (proxiesRawString.isEmpty) return [];
+      final proxies = (json.decode(proxiesRawString) ?? {}) as Map;
+      if (proxies.isEmpty) return [];
+      final groupNames = [
+        UsedProxy.GLOBAL.name,
+        ...(proxies[UsedProxy.GLOBAL.name]["all"] as List).where((e) {
+          final proxy = proxies[e] ?? {};
+          return GroupTypeExtension.valueList.contains(proxy['type']);
+        })
+      ];
+      final groupsRaw = groupNames.map((groupName) {
+        final group = proxies[groupName];
+        group["all"] = ((group["all"] ?? []) as List)
+            .map(
+              (name) => proxies[name],
+            )
+            .where((proxy) => proxy != null)
+            .toList();
+        return group;
+      }).toList();
+      return groupsRaw
+          .map(
+            (e) => Group.fromJson(e),
+          )
+          .toList();
+    });
+  }
+
+  FutureOr<bool> changeProxy(ChangeProxyParams changeProxyParams) async {
+    return await clashInterface.changeProxy(changeProxyParams);
   }
 
   Future<List<ExternalProvider>> getExternalProviders() async {
-    return [];
+    final externalProvidersRawString =
+        await clashInterface.getExternalProviders();
+    return Isolate.run<List<ExternalProvider>>(
+      () {
+        final externalProviders =
+            (json.decode(externalProvidersRawString) as List<dynamic>)
+                .map(
+                  (item) => ExternalProvider.fromJson(item),
+                )
+                .toList();
+        return externalProviders;
+      },
+    );
   }
 
-  ExternalProvider? getExternalProvider(String externalProviderName) {
-    return null;
+  Future<ExternalProvider?> getExternalProvider(
+      String externalProviderName) async {
+    final externalProvidersRawString =
+        await clashInterface.getExternalProvider(externalProviderName);
+    if (externalProvidersRawString == null) {
+      return null;
+    }
+    return ExternalProvider.fromJson(json.decode(externalProvidersRawString));
   }
 
   Future<String> updateGeoData({
     required String geoType,
     required String geoName,
   }) {
-    final completer = Completer<String>();
-    return completer.future;
+    return clashInterface.updateGeoData(geoType: geoType, geoName: geoName);
   }
 
   Future<String> sideLoadExternalProvider({
@@ -117,18 +168,14 @@ class ClashCore {
     return completer.future;
   }
 
-  changeProxy(ChangeProxyParams changeProxyParams) {}
+  startListener() {}
 
-  start() {}
-
-  stop() {}
+  stopListener() {}
 
   Future<Delay> getDelay(String proxyName) {
     final completer = Completer<Delay>();
     return completer.future;
   }
-
-  clearEffect(String profileId) {}
 
   setState(CoreState state) {}
 
@@ -158,7 +205,9 @@ class ClashCore {
 
   updateDns(String dns) {}
 
-  requestGc() {}
+  requestGc() {
+    clashInterface.forceGc();
+  }
 
   void stopTun() {}
 
