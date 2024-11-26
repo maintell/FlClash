@@ -34,4 +34,14 @@ mixin ClashInterface {
   });
 
   Future<String> updateExternalProvider({required String providerName});
+
+  FutureOr<String> getTraffic();
+
+  FutureOr<String> getTotalTraffic();
+
+  resetTraffic();
+
+  startLog();
+
+  stopLog();
 }

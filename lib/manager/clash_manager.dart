@@ -57,28 +57,6 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
     );
   }
 
-  Widget _updateCoreState(Widget child) {
-    return Selector2<Config, ClashConfig, CoreState>(
-      selector: (_, config, clashConfig) => CoreState(
-        enable: config.vpnProps.enable,
-        accessControl: config.isAccessControl ? config.accessControl : null,
-        ipv6: config.vpnProps.ipv6,
-        allowBypass: config.vpnProps.allowBypass,
-        bypassDomain: config.networkProps.bypassDomain,
-        systemProxy: config.vpnProps.systemProxy,
-        onlyProxy: config.appSetting.onlyProxy,
-        currentProfileName:
-            config.currentProfile?.label ?? config.currentProfileId ?? "",
-        routeAddress: clashConfig.routeAddress,
-      ),
-      builder: (__, state, child) {
-        clashCore.setState(state);
-        return child!;
-      },
-      child: child,
-    );
-  }
-
   _changeProfile() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final appController = globalState.appController;
@@ -101,10 +79,8 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
   @override
   Widget build(BuildContext context) {
     return _changeProfileContainer(
-      _updateCoreState(
-        _updateContainer(
-          widget.child,
-        ),
+      _updateContainer(
+        widget.child,
       ),
     );
   }
@@ -158,7 +134,7 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
   Future<void> onLoaded(String providerName) async {
     final appController = globalState.appController;
     appController.appState.setProvider(
-      clashCore.getExternalProvider(
+      await clashCore.getExternalProvider(
         providerName,
       ),
     );

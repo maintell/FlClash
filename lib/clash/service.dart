@@ -3,11 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fl_clash/clash/interface.dart';
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
 import 'package:path/path.dart';
-
-import '../common/constant.dart';
 
 class ClashService with ClashInterface {
   static ClashService? _instance;
@@ -37,6 +36,10 @@ class ClashService with ClashInterface {
   Completer<String>? _sideLoadExternalProviderCompleter;
 
   Completer<String>? _updateExternalProviderCompleter;
+
+  Completer<String>? _getTrafficCompleter;
+
+  Completer<String>? _getTotalTrafficCompleter;
 
   late final Process process;
 
@@ -261,6 +264,39 @@ class ClashService with ClashInterface {
       completer: _updateExternalProviderCompleter!,
     );
   }
+
+  @override
+  FutureOr<String> getTotalTraffic() {
+    _getTotalTrafficCompleter = Completer();
+    return _invoke<String>(
+      method: ActionMethod.getTotalTraffic,
+      completer: _getTotalTrafficCompleter!,
+    );
+  }
+
+  @override
+  FutureOr<String> getTraffic() {
+    _getTrafficCompleter = Completer();
+    return _invoke<String>(
+      method: ActionMethod.getTraffic,
+      completer: _getTrafficCompleter!,
+    );
+  }
+
+  @override
+  resetTraffic() {
+    _prueInvoke(method: ActionMethod.resetTraffic);
+  }
+
+  @override
+  startLog() {
+    _prueInvoke(method: ActionMethod.startLog);
+  }
+
+  @override
+  stopLog() {
+    _prueInvoke(method: ActionMethod.stopLog);
+  }
 }
 
-final clashService = ClashService();
+final clashService = system.isDesktop ? ClashService() : null;

@@ -82,14 +82,12 @@ class GlobalState {
   }
 
   updateStartTime() {
-    startTime = clashCore.getRunTime();
+    startTime = clashLib?.getRunTime();
   }
 
   Future handleStop() async {
     await clashCore.stopListener();
-    if (Platform.isAndroid) {
-      clashCore.stopTun();
-    }
+    clashLib?.stopTun();
     await service?.destroy();
     startTime = null;
     stopListenUpdate();
@@ -125,22 +123,20 @@ class GlobalState {
         config: config,
         clashConfig: clashConfig,
       );
-      if (Platform.isAndroid) {
-        clashCore.setState(
-          CoreState(
-            enable: config.vpnProps.enable,
-            accessControl: config.isAccessControl ? config.accessControl : null,
-            ipv6: config.vpnProps.ipv6,
-            allowBypass: config.vpnProps.allowBypass,
-            systemProxy: config.vpnProps.systemProxy,
-            onlyProxy: config.appSetting.onlyProxy,
-            bypassDomain: config.networkProps.bypassDomain,
-            routeAddress: clashConfig.routeAddress,
-            currentProfileName:
-                config.currentProfile?.label ?? config.currentProfileId ?? "",
-          ),
-        );
-      }
+      clashLib?.setState(
+        CoreState(
+          enable: config.vpnProps.enable,
+          accessControl: config.isAccessControl ? config.accessControl : null,
+          ipv6: config.vpnProps.ipv6,
+          allowBypass: config.vpnProps.allowBypass,
+          systemProxy: config.vpnProps.systemProxy,
+          onlyProxy: config.appSetting.onlyProxy,
+          bypassDomain: config.networkProps.bypassDomain,
+          routeAddress: clashConfig.routeAddress,
+          currentProfileName:
+              config.currentProfile?.label ?? config.currentProfileId ?? "",
+        ),
+      );
     }
   }
 
@@ -222,17 +218,17 @@ class GlobalState {
 
   updateTraffic({
     AppFlowingState? appFlowingState,
-  }) {
-    final traffic = clashCore.getTraffic();
+  }) async {
+    final traffic = await clashCore.getTraffic();
     if (Platform.isAndroid && isVpnService == true) {
       vpn?.startForeground(
-        title: clashCore.getCurrentProfileName(),
+        title: clashLib?.getCurrentProfileName() ?? "",
         content: "$traffic",
       );
     } else {
       if (appFlowingState != null) {
         appFlowingState.addTraffic(traffic);
-        appFlowingState.totalTraffic = clashCore.getTotalTraffic();
+        appFlowingState.totalTraffic = await clashCore.getTotalTraffic();
       }
     }
   }

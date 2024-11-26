@@ -229,90 +229,39 @@ class ClashLib with ClashInterface {
     return completer.future;
   }
 
-  setState(CoreState state) {
-    final stateChar = json.encode(state).toNativeUtf8().cast<Char>();
-    clashFFI.setState(stateChar);
-    malloc.free(stateChar);
-  }
-
-  String getCurrentProfileName() {
-    final currentProfileRaw = clashFFI.getCurrentProfileName();
-    final currentProfile = currentProfileRaw.cast<Utf8>().toDartString();
-    clashFFI.freeCString(currentProfileRaw);
-    return currentProfile;
-  }
-
-  AndroidVpnOptions getAndroidVpnOptions() {
-    final vpnOptionsRaw = clashFFI.getAndroidVpnOptions();
-    final vpnOptions = json.decode(vpnOptionsRaw.cast<Utf8>().toDartString());
-    clashFFI.freeCString(vpnOptionsRaw);
-    return AndroidVpnOptions.fromJson(vpnOptions);
-  }
-
-  Traffic getTraffic() {
+  @override
+  String getTraffic() {
     final trafficRaw = clashFFI.getTraffic();
-    final trafficMap = json.decode(trafficRaw.cast<Utf8>().toDartString());
+    final trafficString = trafficRaw.cast<Utf8>().toDartString();
     clashFFI.freeCString(trafficRaw);
-    return Traffic.fromMap(trafficMap);
+    return trafficString;
   }
 
-  Traffic getTotalTraffic() {
+  @override
+  String getTotalTraffic() {
     final trafficRaw = clashFFI.getTotalTraffic();
-    final trafficMap = json.decode(trafficRaw.cast<Utf8>().toDartString());
     clashFFI.freeCString(trafficRaw);
-    return Traffic.fromMap(trafficMap);
+    return trafficRaw.cast<Utf8>().toDartString();
   }
 
+  @override
   void resetTraffic() {
     clashFFI.resetTraffic();
   }
 
+  @override
   void startLog() {
     clashFFI.startLog();
   }
 
+  @override
   stopLog() {
     clashFFI.stopLog();
-  }
-
-  startTun(int fd, int port) {
-    if (!Platform.isAndroid) return;
-    clashFFI.startTUN(fd, port);
-  }
-
-  updateDns(String dns) {
-    if (!Platform.isAndroid) return;
-    final dnsChar = dns.toNativeUtf8().cast<Char>();
-    clashFFI.updateDns(dnsChar);
-    malloc.free(dnsChar);
   }
 
   @override
   forceGc() {
     clashFFI.forceGc();
-  }
-
-  void stopTun() {
-    clashFFI.stopTun();
-  }
-
-  void setProcessMap(ProcessMapItem processMapItem) {
-    final processMapItemChar =
-        json.encode(processMapItem).toNativeUtf8().cast<Char>();
-    clashFFI.setProcessMap(processMapItemChar);
-    malloc.free(processMapItemChar);
-  }
-
-  void setFdMap(int fd) {
-    clashFFI.setFdMap(fd);
-  }
-
-  DateTime? getRunTime() {
-    final runTimeRaw = clashFFI.getRunTime();
-    final runTimeString = runTimeRaw.cast<Utf8>().toDartString();
-    clashFFI.freeCString(runTimeRaw);
-    if (runTimeString.isEmpty) return null;
-    return DateTime.fromMillisecondsSinceEpoch(int.parse(runTimeString));
   }
 
   List<Connection> getConnections() {
@@ -333,6 +282,62 @@ class ClashLib with ClashInterface {
   closeConnections() {
     clashFFI.closeConnections();
   }
+
+  /// Android
+  startTun(int fd, int port) {
+    if (!Platform.isAndroid) return;
+    clashFFI.startTUN(fd, port);
+  }
+
+  stopTun() {
+    clashFFI.stopTun();
+  }
+
+  updateDns(String dns) {
+    if (!Platform.isAndroid) return;
+    final dnsChar = dns.toNativeUtf8().cast<Char>();
+    clashFFI.updateDns(dnsChar);
+    malloc.free(dnsChar);
+  }
+
+  setProcessMap(ProcessMapItem processMapItem) {
+    final processMapItemChar =
+        json.encode(processMapItem).toNativeUtf8().cast<Char>();
+    clashFFI.setProcessMap(processMapItemChar);
+    malloc.free(processMapItemChar);
+  }
+
+  setState(CoreState state) {
+    final stateChar = json.encode(state).toNativeUtf8().cast<Char>();
+    clashFFI.setState(stateChar);
+    malloc.free(stateChar);
+  }
+
+  String getCurrentProfileName() {
+    final currentProfileRaw = clashFFI.getCurrentProfileName();
+    final currentProfile = currentProfileRaw.cast<Utf8>().toDartString();
+    clashFFI.freeCString(currentProfileRaw);
+    return currentProfile;
+  }
+
+  AndroidVpnOptions getAndroidVpnOptions() {
+    final vpnOptionsRaw = clashFFI.getAndroidVpnOptions();
+    final vpnOptions = json.decode(vpnOptionsRaw.cast<Utf8>().toDartString());
+    clashFFI.freeCString(vpnOptionsRaw);
+    return AndroidVpnOptions.fromJson(vpnOptions);
+  }
+
+  setFdMap(int fd) {
+    clashFFI.setFdMap(fd);
+  }
+
+  DateTime? getRunTime() {
+    final runTimeRaw = clashFFI.getRunTime();
+    final runTimeString = runTimeRaw.cast<Utf8>().toDartString();
+    clashFFI.freeCString(runTimeRaw);
+    if (runTimeString.isEmpty) return null;
+    return DateTime.fromMillisecondsSinceEpoch(int.parse(runTimeString));
+  }
 }
 
-final clashLib = ClashLib();
+final clashLib = Platform.isAndroid ? ClashLib() : null;

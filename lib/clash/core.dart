@@ -5,7 +5,6 @@ import 'dart:isolate';
 
 import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/clash/interface.dart';
-import 'package:fl_clash/clash/lib.dart';
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -20,9 +19,9 @@ class ClashCore {
 
   ClashCore._internal() {
     if (Platform.isAndroid) {
-      clashInterface = clashLib;
+      clashInterface = clashLib!;
     } else {
-      clashInterface = clashService;
+      clashInterface = clashService!;
     }
   }
 
@@ -177,45 +176,31 @@ class ClashCore {
     return completer.future;
   }
 
-  setState(CoreState state) {}
-
-  String getCurrentProfileName() {
-    return "";
+  Future<Traffic> getTraffic() async {
+    final trafficString = await clashInterface.getTraffic();
+    return Traffic.fromMap(json.decode(trafficString));
   }
 
-  AndroidVpnOptions getAndroidVpnOptions() {
-    return AndroidVpnOptions.fromJson(Map());
+  Future<Traffic> getTotalTraffic() async {
+    final totalTrafficString = await clashInterface.getTotalTraffic();
+    return Traffic.fromMap(json.decode(totalTrafficString));
   }
 
-  Traffic getTraffic() {
-    return Traffic();
+  resetTraffic() {
+    clashInterface.resetTraffic();
   }
 
-  Traffic getTotalTraffic() {
-    return Traffic();
+  startLog() {
+    clashInterface.startLog();
   }
 
-  void resetTraffic() {}
-
-  void startLog() {}
-
-  stopLog() {}
-
-  startTun(int fd, int port) {}
-
-  updateDns(String dns) {}
+  stopLog() {
+    clashInterface.stopLog();
+  }
 
   requestGc() {
     clashInterface.forceGc();
   }
-
-  void stopTun() {}
-
-  void setProcessMap(ProcessMapItem processMapItem) {}
-
-  void setFdMap(int fd) {}
-
-  DateTime? getRunTime() {}
 
   List<Connection> getConnections() {
     return [];

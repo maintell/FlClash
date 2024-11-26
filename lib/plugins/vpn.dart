@@ -27,7 +27,7 @@ class Vpn {
           clashCore.requestGc();
         case "dnsChanged":
           final dns = call.arguments as String;
-          clashCore.updateDns(dns);
+          clashLib?.updateDns(dns);
         default:
           throw MissingPluginException();
       }
@@ -40,7 +40,7 @@ class Vpn {
   }
 
   Future<bool?> startVpn() async {
-    final options = clashCore.getAndroidVpnOptions();
+    final options = clashLib?.getAndroidVpnOptions();
     return await methodChannel.invokeMethod<bool>("start", {
       'data': json.encode(options),
     });
@@ -79,7 +79,7 @@ class Vpn {
     receiver!.listen((message) {
       _handleServiceMessage(message);
     });
-    clashCore.startTun(fd, receiver!.sendPort.nativePort);
+    clashLib?.startTun(fd, receiver!.sendPort.nativePort);
   }
 
   setServiceMessageHandler(ServiceMessageListener serviceMessageListener) {

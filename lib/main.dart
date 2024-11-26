@@ -84,11 +84,11 @@ Future<void> vpnService() async {
     ServiceMessageHandler(
       onProtect: (Fd fd) async {
         await vpn?.setProtect(fd.value);
-        clashCore.setFdMap(fd.id);
+        clashLib?.setFdMap(fd.id);
       },
       onProcess: (ProcessData process) async {
         final packageName = await vpn?.resolverProcess(process);
-        clashCore.setProcessMap(
+        clashLib?.setProcessMap(
           ProcessMapItem(
             id: process.id,
             value: packageName ?? "",

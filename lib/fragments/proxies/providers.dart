@@ -56,7 +56,7 @@ class _ProvidersState extends State<Providers> {
           providerName: provider.name,
         );
         appState.setProvider(
-          clashCore.getExternalProvider(provider.name),
+          await clashCore.getExternalProvider(provider.name),
         );
       },
     );
@@ -122,7 +122,7 @@ class ProviderItem extends StatelessWidget {
         if (message.isNotEmpty) throw message;
       });
       appState.setProvider(
-        clashCore.getExternalProvider(provider.name),
+        await clashCore.getExternalProvider(provider.name),
       );
     });
     await globalState.appController.updateGroupDebounce();
@@ -143,7 +143,7 @@ class ProviderItem extends StatelessWidget {
       );
       if (message.isNotEmpty) throw message;
       appState.setProvider(
-        clashCore.getExternalProvider(provider.name),
+        await clashCore.getExternalProvider(provider.name),
       );
       if (message.isNotEmpty) throw message;
     });
