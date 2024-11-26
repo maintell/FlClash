@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/common/common.dart';
@@ -22,7 +23,7 @@ class ClashService with ClashInterface {
   }
 
   ClashService._internal() {
-    _connectCore(55381);
+    _connectCore(53062);
   }
 
   _initCore() async {
@@ -53,18 +54,29 @@ class ClashService with ClashInterface {
     }
     final socket = await Socket.connect(localhost, port);
     socketCompleter.complete(socket);
-    socket.listen((output) {
-      final data = String.fromCharCodes(output).trim();
-      _handleAction(
-        Action.fromJson(
-          json.decode(data),
-        ),
-      );
-    });
+
+    socket
+        .transform(
+          StreamTransformer<Uint8List, String>.fromHandlers(
+            handleData: (Uint8List data, EventSink<String> sink) {
+              sink.add(utf8.decode(data));
+            },
+          ),
+        )
+        .transform(LineSplitter())
+        .listen(
+          (data) {
+            print(data);
+            _handleAction(
+              Action.fromJson(
+                json.decode(data.trim()),
+              ),
+            );
+          },
+        );
   }
 
   _handleAction(Action action) {
-    print(action);
     final completer = callbackCompleterMap[action.id];
     switch (action.method) {
       case ActionMethod.initClash:
@@ -74,10 +86,10 @@ class ClashService with ClashInterface {
       case ActionMethod.resetTraffic:
       case ActionMethod.closeConnections:
       case ActionMethod.closeConnection:
+      case ActionMethod.changeProxy:
         completer?.complete(action.data as bool);
         return;
       case ActionMethod.getProxies:
-      case ActionMethod.changeProxy:
       case ActionMethod.getTraffic:
       case ActionMethod.getTotalTraffic:
       case ActionMethod.asyncTestDelay:
@@ -195,7 +207,7 @@ class ClashService with ClashInterface {
   FutureOr<bool> changeProxy(ChangeProxyParams changeProxyParams) {
     return _invoke<bool>(
       method: ActionMethod.changeProxy,
-      data: changeProxyParams,
+      data: json.encode(changeProxyParams),
     );
   }
 

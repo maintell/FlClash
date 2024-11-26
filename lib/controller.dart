@@ -307,7 +307,6 @@ class AppController {
     if (Platform.isAndroid) {
       globalState.updateStartTime();
     }
-    jsonDecode(source)
     await applyProfile();
     if (globalState.isStart) {
       await updateStatus(true);

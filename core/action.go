@@ -58,7 +58,7 @@ func (action Action) callback(data interface{}) bool {
 	if err != nil {
 		return false
 	}
-	_, err = conn.Write(res)
+	_, err = conn.Write(append(res, []byte("\n")...))
 	if err != nil {
 		return false
 	}
