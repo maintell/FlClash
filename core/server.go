@@ -60,64 +60,37 @@ func handleAction(action *Action) {
 	switch action.Method {
 	case initClashMethod:
 		data := action.Data.(string)
-		Action{
-			Method: initClashMethod,
-			Data:   handleInitClash(data),
-		}.send()
+		action.callback(handleInitClash(data))
 		return
 	case getIsInitMethod:
-		Action{
-			Method: initClashMethod,
-			Data:   handleGetIsInit(),
-		}.send()
+		action.callback(handleGetIsInit())
 		return
 	case forceGcMethod:
 		handleForceGc()
 		return
 	case shutdownMethod:
-		Action{
-			Method: shutdownMethod,
-			Data:   handleShutdown(),
-		}.send()
+		action.callback(handleShutdown())
 		return
 	case validateConfigMethod:
 		data := []byte(action.Data.(string))
-		Action{
-			Method: validateConfigMethod,
-			Data:   handleValidateConfig(data),
-		}.send()
+		action.callback(handleValidateConfig(data))
 		return
 	case updateConfigMethod:
 		data := []byte(action.Data.(string))
-		Action{
-			Method: updateConfigMethod,
-			Data:   handleUpdateConfig(data),
-		}.send()
+		action.callback(handleUpdateConfig(data))
 		return
 	case getProxiesMethod:
-		Action{
-			Method: getProxiesMethod,
-			Data:   handleGetProxies(),
-		}.send()
+		action.callback(handleGetProxies())
 		return
 	case changeProxyMethod:
 		data := action.Data.(string)
-		Action{
-			Method: changeProxyMethod,
-			Data:   handleChangeProxy(data),
-		}.send()
+		action.callback(handleChangeProxy(data))
 		return
 	case getTrafficMethod:
-		Action{
-			Method: getTrafficMethod,
-			Data:   handleGetTraffic(),
-		}.send()
+		action.callback(handleGetTraffic())
 		return
 	case getTotalTrafficMethod:
-		Action{
-			Method: getTotalTrafficMethod,
-			Data:   handleGetExternalProviders(),
-		}.send()
+		action.callback(handleGetExternalProviders())
 		return
 	case resetTrafficMethod:
 		handleResetTraffic()
@@ -125,64 +98,43 @@ func handleAction(action *Action) {
 	case asyncTestDelayMethod:
 		data := action.Data.(string)
 		handleAsyncTestDelay(data, func(value string) {
-			Action{
-				Method: asyncTestDelayMethod,
-				Data:   value,
-			}.send()
+			action.callback(value)
 		})
 		return
 	case getConnectionsMethod:
-		Action{
-			Method: getConnectionsMethod,
-			Data:   handleGetConnections(),
-		}.send()
+		action.callback(handleGetConnections())
 		return
 	case closeConnectionsMethod:
-		handleCloseConnections()
+		action.callback(handleCloseConnections())
 		return
 	case closeConnectionMethod:
 		id := action.Data.(string)
-		handleCloseConnection(id)
+		action.callback(handleCloseConnection(id))
 		return
 	case getExternalProvidersMethod:
-		Action{
-			Method: getExternalProvidersMethod,
-			Data:   handleGetExternalProviders(),
-		}.send()
+		action.callback(handleGetExternalProviders())
 		return
 	case getExternalProviderMethod:
 		externalProviderName := action.Data.(string)
-		Action{
-			Method: getExternalProviderMethod,
-			Data:   handleGetExternalProvider(externalProviderName),
-		}.send()
+		action.callback(handleGetExternalProvider(externalProviderName))
 	case updateGeoDataMethod:
 		paramsString := action.Data.(string)
 		var params = map[string]string{}
 		err := json.Unmarshal([]byte(paramsString), &params)
 		if err != nil {
-			Action{
-				Method: updateGeoDataMethod,
-				Data:   err.Error(),
-			}.send()
+			action.callback(err.Error())
 			return
 		}
 		geoType := params["geoType"]
 		geoName := params["geoName"]
 		handleUpdateGeoData(geoType, geoName, func(value string) {
-			Action{
-				Method: updateGeoDataMethod,
-				Data:   value,
-			}.send()
+			action.callback(value)
 		})
 		return
 	case updateExternalProviderMethod:
 		providerName := action.Data.(string)
 		handleUpdateExternalProvider(providerName, func(value string) {
-			Action{
-				Method: updateExternalProviderMethod,
-				Data:   value,
-			}.send()
+			action.callback(value)
 		})
 		return
 	case sideLoadExternalProviderMethod:
@@ -190,19 +142,13 @@ func handleAction(action *Action) {
 		var params = map[string]string{}
 		err := json.Unmarshal([]byte(paramsString), &params)
 		if err != nil {
-			Action{
-				Method: sideLoadExternalProviderMethod,
-				Data:   err.Error(),
-			}.send()
+			action.callback(err.Error())
 			return
 		}
 		providerName := params["providerName"]
 		data := params["data"]
 		handleSideLoadExternalProvider(providerName, []byte(data), func(value string) {
-			Action{
-				Method: sideLoadExternalProviderMethod,
-				Data:   value,
-			}.send()
+			action.callback(value)
 		})
 		return
 	case startLogMethod:
@@ -211,5 +157,12 @@ func handleAction(action *Action) {
 	case stopLogMethod:
 		handleStopLog()
 		return
+	case startListenerMethod:
+		action.callback(handleStartListener())
+		return
+	case stopListenerMethod:
+		handleStartListener()
+		return
 	}
+
 }

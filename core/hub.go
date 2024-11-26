@@ -1,6 +1,5 @@
 package main
 
-import "C"
 import (
 	"context"
 	"core/state"
@@ -40,10 +39,11 @@ func handleInitClash(homeDirStr string) bool {
 	return isInit
 }
 
-func handleStartListener() {
+func handleStartListener() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	isRunning = true
+	return true
 }
 
 func handleStopListener() {
@@ -83,16 +83,17 @@ func handleValidateConfig(bytes []byte) string {
 }
 
 func handleUpdateConfig(bytes []byte) string {
-	runLock.Lock()
-	defer runLock.Unlock()
 	var params = &GenerateConfigParams{}
 	err := json.Unmarshal(bytes, params)
 	if err != nil {
 		return err.Error()
 	}
+
 	configParams = params.Params
 	prof := decorationConfig(params.ProfileId, params.Config)
+	runLock.Lock()
 	state.CurrentRawConfig = prof
+	runLock.Unlock()
 	err = applyConfig()
 	if err != nil {
 		return err.Error()
@@ -233,7 +234,18 @@ func handleGetConnections() string {
 	return string(data)
 }
 
-func handleCloseConnections() {
+func handleCloseConnectionsUnLock() bool {
+	statistic.DefaultManager.Range(func(c statistic.Tracker) bool {
+		err := c.Close()
+		if err != nil {
+			return false
+		}
+		return true
+	})
+	return true
+}
+
+func handleCloseConnections() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	statistic.DefaultManager.Range(func(c statistic.Tracker) bool {
@@ -243,16 +255,18 @@ func handleCloseConnections() {
 		}
 		return true
 	})
+	return true
 }
 
-func handleCloseConnection(connectionId string) {
+func handleCloseConnection(connectionId string) bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	c := statistic.DefaultManager.Get(connectionId)
 	if c == nil {
-		return
+		return false
 	}
 	_ = c.Close()
+	return true
 }
 
 func handleGetExternalProviders() string {

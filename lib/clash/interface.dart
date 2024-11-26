@@ -13,11 +13,17 @@ mixin ClashInterface {
 
   FutureOr<String> validateConfig(String data);
 
+  Future<String> asyncTestDelay(String proxyName);
+
   FutureOr<String> updateConfig(UpdateConfigParams updateConfigParams);
 
   FutureOr<String> getProxies();
 
   FutureOr<bool> changeProxy(ChangeProxyParams changeProxyParams);
+
+  Future<bool> startListener();
+
+  stopListener();
 
   FutureOr<String> getExternalProviders();
 
@@ -44,4 +50,10 @@ mixin ClashInterface {
   startLog();
 
   stopLog();
+
+  FutureOr<String> getConnections();
+
+  FutureOr<bool> closeConnection(String id);
+
+  FutureOr<bool> closeConnections();
 }

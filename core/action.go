@@ -1,36 +1,41 @@
 package main
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 const (
-	messageMethod                  = `json:"message"`
-	initClashMethod                = `json:"initClash"`
-	getIsInitMethod                = `json:"getIsInit"`
-	forceGcMethod                  = `json:"forceGc"`
-	shutdownMethod                 = `json:"shutdown"`
-	validateConfigMethod           = `json:"validateConfig"`
-	updateConfigMethod             = `json:"updateConfig"`
-	getProxiesMethod               = `json:"getProxies"`
-	changeProxyMethod              = `json:"changeProxy"`
-	getTrafficMethod               = `json:"getTraffic"`
-	getTotalTrafficMethod          = `json:"getTotalTraffic"`
-	resetTrafficMethod             = `json:"resetTraffic"`
-	asyncTestDelayMethod           = `json:"asyncTestDelay"`
-	getConnectionsMethod           = `json:"getConnections"`
-	closeConnectionsMethod         = `json:"closeConnections"`
-	closeConnectionMethod          = `json:"closeConnection"`
-	getExternalProvidersMethod     = `json:"getExternalProviders"`
-	getExternalProviderMethod      = `json:"getExternalProvider"`
-	updateGeoDataMethod            = `json:"updateGeoData"`
-	updateExternalProviderMethod   = `json:"updateExternalProvider"`
-	sideLoadExternalProviderMethod = `json:"sideLoadExternalProvider"`
-	startLogMethod                 = `json:"startLog"`
-	stopLogMethod                  = `json:"stopLog"`
+	messageMethod                  Method = "message"
+	initClashMethod                Method = "initClash"
+	getIsInitMethod                Method = "getIsInit"
+	forceGcMethod                  Method = "forceGc"
+	shutdownMethod                 Method = "shutdown"
+	validateConfigMethod           Method = "validateConfig"
+	updateConfigMethod             Method = "updateConfig"
+	getProxiesMethod               Method = "getProxies"
+	changeProxyMethod              Method = "changeProxy"
+	getTrafficMethod               Method = "getTraffic"
+	getTotalTrafficMethod          Method = "getTotalTraffic"
+	resetTrafficMethod             Method = "resetTraffic"
+	asyncTestDelayMethod           Method = "asyncTestDelay"
+	getConnectionsMethod           Method = "getConnections"
+	closeConnectionsMethod         Method = "closeConnections"
+	closeConnectionMethod          Method = "closeConnection"
+	getExternalProvidersMethod     Method = "getExternalProviders"
+	getExternalProviderMethod      Method = "getExternalProvider"
+	updateGeoDataMethod            Method = "updateGeoData"
+	updateExternalProviderMethod   Method = "updateExternalProvider"
+	sideLoadExternalProviderMethod Method = "sideLoadExternalProvider"
+	startLogMethod                 Method = "startLog"
+	stopLogMethod                  Method = "stopLog"
+	startListenerMethod            Method = "startListener"
+	stopListenerMethod             Method = "stopListener"
 )
 
 type Method string
 
 type Action struct {
+	Id     string      `json:"id"`
 	Method Method      `json:"method"`
 	Data   interface{} `json:"data"`
 }
@@ -40,11 +45,16 @@ func (action Action) Json() ([]byte, error) {
 	return data, err
 }
 
-func (action Action) send() bool {
+func (action Action) callback(data interface{}) bool {
 	if conn == nil {
 		return false
 	}
-	res, err := action.Json()
+	sendAction := Action{
+		Id:     action.Id,
+		Method: action.Method,
+		Data:   data,
+	}
+	res, err := sendAction.Json()
 	if err != nil {
 		return false
 	}

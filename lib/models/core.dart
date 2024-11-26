@@ -241,6 +241,7 @@ class Action with _$Action {
   const factory Action({
     required ActionMethod method,
     required dynamic data,
+    required String id,
   }) = _Action;
 
   factory Action.fromJson(Map<String, Object?> json) => _$ActionFromJson(json);

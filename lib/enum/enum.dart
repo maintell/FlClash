@@ -203,4 +203,6 @@ enum ActionMethod {
   sideLoadExternalProvider,
   startLog,
   stopLog,
+  startListener,
+  stopListener,
 }

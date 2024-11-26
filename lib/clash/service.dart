@@ -6,40 +6,13 @@ import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
-import 'package:path/path.dart';
 
 class ClashService with ClashInterface {
   static ClashService? _instance;
 
   Completer<Socket> socketCompleter = Completer();
 
-  Completer<bool>? _initClashCompleter;
-
-  Completer<bool>? _shutdownCompleter;
-
-  Completer<bool>? _getIsInitCompleter;
-
-  Completer<String>? _validateConfigCompleter;
-
-  Completer<String>? _updateConfigCompleter;
-
-  Completer<String>? _getProxiesCompleter;
-
-  Completer<bool>? _changeProxyCompleter;
-
-  Completer<String>? _getExternalProvidersCompleter;
-
-  Completer<String>? _getExternalProviderCompleter;
-
-  Completer<String>? _updateGeoDataCompleter;
-
-  Completer<String>? _sideLoadExternalProviderCompleter;
-
-  Completer<String>? _updateExternalProviderCompleter;
-
-  Completer<String>? _getTrafficCompleter;
-
-  Completer<String>? _getTotalTrafficCompleter;
+  Map<String, Completer> callbackCompleterMap = {};
 
   late final Process process;
 
@@ -49,21 +22,30 @@ class ClashService with ClashInterface {
   }
 
   ClashService._internal() {
-    _initCore();
+    _connectCore(55381);
   }
 
   _initCore() async {
-    String currentExecutablePath = Platform.resolvedExecutable;
-    Directory currentDirectory = Directory(dirname(currentExecutablePath));
-    final path = join(currentDirectory.path, "core");
-    process = await Process.start(path, []);
-    final port = int.parse(
-      String.fromCharCodes(await process.stdout.first).trim(),
-    );
-    _connectCore(port);
+    // String currentExecutablePath = Platform.resolvedExecutable;
+    // Directory currentDirectory = Directory(dirname(currentExecutablePath));
+    // final path = join(currentDirectory.path, "core");
+    // process = await Process.start(path, []);
+    // process.stdout.listen((data) {
+    //   var string = String.fromCharCodes(data);
+    //   print(string);
+    //   var value = int.tryParse(string);
+    //   if (value != null) {
+    //     _connectCore(value);
+    //   }
+    // });
+
+    // final portString = String.fromCharCodes(await process.stdout.first).trim();
+    // final port = int.parse(portString);
+    // _connectCore(port);
   }
 
   _connectCore(int port) async {
+    print("_connectCore ==>");
     if (socketCompleter.isCompleted) {
       final socket = await socketCompleter.future;
       await socket.close();
@@ -82,19 +64,38 @@ class ClashService with ClashInterface {
   }
 
   _handleAction(Action action) {
+    print(action);
+    final completer = callbackCompleterMap[action.id];
     switch (action.method) {
       case ActionMethod.initClash:
-        _initClashCompleter?.complete(action.data as bool);
-        return;
       case ActionMethod.shutdown:
-        _shutdownCompleter?.complete(action.data as bool);
-        return;
       case ActionMethod.getIsInit:
-        _getIsInitCompleter?.complete(action.data as bool);
+      case ActionMethod.startListener:
+      case ActionMethod.resetTraffic:
+      case ActionMethod.closeConnections:
+      case ActionMethod.closeConnection:
+        completer?.complete(action.data as bool);
         return;
+      case ActionMethod.getProxies:
+      case ActionMethod.changeProxy:
+      case ActionMethod.getTraffic:
+      case ActionMethod.getTotalTraffic:
+      case ActionMethod.asyncTestDelay:
+      case ActionMethod.getConnections:
+      case ActionMethod.getExternalProviders:
+      case ActionMethod.getExternalProvider:
       case ActionMethod.validateConfig:
-        _validateConfigCompleter?.complete(action.data as String);
+      case ActionMethod.updateConfig:
+      case ActionMethod.updateGeoData:
+      case ActionMethod.updateExternalProvider:
+      case ActionMethod.sideLoadExternalProvider:
+        completer?.complete(action.data as String);
         return;
+      case ActionMethod.message:
+      case ActionMethod.forceGc:
+      case ActionMethod.startLog:
+      case ActionMethod.stopLog:
+      case ActionMethod.stopListener:
       default:
         return;
     }
@@ -103,47 +104,51 @@ class ClashService with ClashInterface {
   Future<T> _invoke<T>({
     required ActionMethod method,
     dynamic data,
-    required Completer<T> completer,
   }) async {
+    final id = "${method.name}#${other.id}";
     final socket = await socketCompleter.future;
+    callbackCompleterMap[id] = Completer<T>();
     socket.writeln(
-      Action(
-        method: method,
-        data: data,
-      ).toJson(),
+      json.encode(
+        Action(
+          id: id,
+          method: method,
+          data: data,
+        ),
+      ),
     );
-    return completer.future;
+    return (callbackCompleterMap[id] as Completer<T>).future;
   }
 
   _prueInvoke({
     required ActionMethod method,
     dynamic data,
   }) async {
+    final id = "${method.name}#${other.id}";
     final socket = await socketCompleter.future;
     socket.writeln(
-      Action(
-        method: method,
-        data: data,
-      ).toJson(),
+      json.encode(
+        Action(
+          id: id,
+          method: method,
+          data: data,
+        ),
+      ),
     );
   }
 
   @override
   Future<bool> init(String homeDir) {
-    _initClashCompleter = Completer();
     return _invoke<bool>(
       method: ActionMethod.initClash,
       data: homeDir,
-      completer: _initClashCompleter!,
     );
   }
 
   @override
   shutdown() async {
-    _shutdownCompleter = Completer();
     final res = await _invoke<bool>(
       method: ActionMethod.shutdown,
-      completer: _shutdownCompleter!,
     );
     if (!res) {
       return;
@@ -153,10 +158,8 @@ class ClashService with ClashInterface {
 
   @override
   Future<bool> get isInit {
-    _getIsInitCompleter = Completer();
     return _invoke<bool>(
       method: ActionMethod.getIsInit,
-      completer: _getIsInitCompleter!,
     );
   }
 
@@ -167,59 +170,47 @@ class ClashService with ClashInterface {
 
   @override
   FutureOr<String> validateConfig(String data) {
-    _validateConfigCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.validateConfig,
       data: data,
-      completer: _validateConfigCompleter!,
     );
   }
 
   @override
   FutureOr<String> updateConfig(UpdateConfigParams updateConfigParams) {
-    _updateConfigCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.updateConfig,
-      data: updateConfigParams,
-      completer: _updateConfigCompleter!,
+      data: json.encode(updateConfigParams),
     );
   }
 
   @override
   Future<String> getProxies() {
-    _getProxiesCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.getProxies,
-      completer: _getProxiesCompleter!,
     );
   }
 
   @override
   FutureOr<bool> changeProxy(ChangeProxyParams changeProxyParams) {
-    _changeProxyCompleter = Completer();
     return _invoke<bool>(
       method: ActionMethod.changeProxy,
       data: changeProxyParams,
-      completer: _changeProxyCompleter!,
     );
   }
 
   @override
   FutureOr<String> getExternalProviders() {
-    _getExternalProvidersCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.getExternalProviders,
-      completer: _getExternalProvidersCompleter!,
     );
   }
 
   @override
   FutureOr<String> getExternalProvider(String externalProviderName) {
-    _getExternalProviderCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.getExternalProvider,
       data: externalProviderName,
-      completer: _getExternalProviderCompleter!,
     );
   }
 
@@ -228,14 +219,12 @@ class ClashService with ClashInterface {
     required String geoType,
     required String geoName,
   }) {
-    _updateGeoDataCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.updateGeoData,
       data: {
         "geoType": geoType,
         "geoName": geoName,
       },
-      completer: _updateGeoDataCompleter!,
     );
   }
 
@@ -244,42 +233,56 @@ class ClashService with ClashInterface {
     required String providerName,
     required String data,
   }) {
-    _sideLoadExternalProviderCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.sideLoadExternalProvider,
       data: {
         "providerName": providerName,
         "data": data,
       },
-      completer: _sideLoadExternalProviderCompleter!,
     );
   }
 
   @override
   Future<String> updateExternalProvider({required String providerName}) {
-    _updateExternalProviderCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.updateExternalProvider,
       data: providerName,
-      completer: _updateExternalProviderCompleter!,
+    );
+  }
+
+  @override
+  FutureOr<String> getConnections() {
+    return _invoke<String>(
+      method: ActionMethod.getConnections,
+    );
+  }
+
+  @override
+  Future<bool> closeConnections() {
+    return _invoke<bool>(
+      method: ActionMethod.closeConnections,
+    );
+  }
+
+  @override
+  Future<bool> closeConnection(String id) {
+    return _invoke<bool>(
+      method: ActionMethod.closeConnection,
+      data: id,
     );
   }
 
   @override
   FutureOr<String> getTotalTraffic() {
-    _getTotalTrafficCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.getTotalTraffic,
-      completer: _getTotalTrafficCompleter!,
     );
   }
 
   @override
   FutureOr<String> getTraffic() {
-    _getTrafficCompleter = Completer();
     return _invoke<String>(
       method: ActionMethod.getTraffic,
-      completer: _getTrafficCompleter!,
     );
   }
 
@@ -296,6 +299,28 @@ class ClashService with ClashInterface {
   @override
   stopLog() {
     _prueInvoke(method: ActionMethod.stopLog);
+  }
+
+  @override
+  Future<bool> startListener() {
+    return _invoke<bool>(
+      method: ActionMethod.startListener,
+    );
+  }
+
+  @override
+  stopListener() {
+    return _invoke<bool>(
+      method: ActionMethod.stopListener,
+    );
+  }
+
+  @override
+  Future<String> asyncTestDelay(String proxyName) {
+    return _invoke<String>(
+      method: ActionMethod.asyncTestDelay,
+      data: proxyName,
+    );
   }
 }
 

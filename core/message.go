@@ -51,8 +51,8 @@ func SendMessage(message Message) {
 	if Port == -1 && ServicePort == -1 {
 		Action{
 			Method: messageMethod,
-			Data:   s,
-		}.send()
+		}.callback(s)
+		return
 	}
 	if handler, ok := messageHandlers[message.Type]; ok {
 		handler(s)

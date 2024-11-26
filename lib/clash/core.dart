@@ -80,8 +80,8 @@ class ClashCore {
     return clashInterface.validateConfig(data);
   }
 
-  FutureOr<String> updateConfig(UpdateConfigParams updateConfigParams) {
-    return clashInterface.updateConfig(updateConfigParams);
+  Future<String> updateConfig(UpdateConfigParams updateConfigParams) async {
+    return await clashInterface.updateConfig(updateConfigParams);
   }
 
   Future<List<Group>> getProxiesGroups() async {
@@ -117,6 +117,21 @@ class ClashCore {
 
   FutureOr<bool> changeProxy(ChangeProxyParams changeProxyParams) async {
     return await clashInterface.changeProxy(changeProxyParams);
+  }
+
+  Future<List<Connection>> getConnections() async {
+    final res = await clashInterface.getConnections();
+    final connectionsData = json.decode(res) as Map;
+    final connectionsRaw = connectionsData['connections'] as List? ?? [];
+    return connectionsRaw.map((e) => Connection.fromJson(e)).toList();
+  }
+
+  closeConnection(String id) {
+    clashInterface.closeConnection(id);
+  }
+
+  closeConnections() {
+    clashInterface.closeConnections();
   }
 
   Future<List<ExternalProvider>> getExternalProviders() async {
@@ -167,13 +182,17 @@ class ClashCore {
     return completer.future;
   }
 
-  startListener() {}
+  startListener() async {
+    await clashInterface.startListener();
+  }
 
-  stopListener() {}
+  stopListener() {
+    clashInterface.startListener();
+  }
 
-  Future<Delay> getDelay(String proxyName) {
-    final completer = Completer<Delay>();
-    return completer.future;
+  Future<Delay> getDelay(String proxyName) async {
+    final data = await clashInterface.asyncTestDelay(proxyName);
+    return Delay.fromJson(json.decode(data));
   }
 
   Future<Traffic> getTraffic() async {
@@ -201,14 +220,6 @@ class ClashCore {
   requestGc() {
     clashInterface.forceGc();
   }
-
-  List<Connection> getConnections() {
-    return [];
-  }
-
-  closeConnection(String id) {}
-
-  closeConnections() {}
 }
 
 final clashCore = ClashCore();

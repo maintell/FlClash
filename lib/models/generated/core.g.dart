@@ -293,12 +293,14 @@ Map<String, dynamic> _$$TunPropsImplToJson(_$TunPropsImpl instance) =>
 _$ActionImpl _$$ActionImplFromJson(Map<String, dynamic> json) => _$ActionImpl(
       method: $enumDecode(_$ActionMethodEnumMap, json['method']),
       data: json['data'],
+      id: json['id'] as String,
     );
 
 Map<String, dynamic> _$$ActionImplToJson(_$ActionImpl instance) =>
     <String, dynamic>{
       'method': _$ActionMethodEnumMap[instance.method]!,
       'data': instance.data,
+      'id': instance.id,
     };
 
 const _$ActionMethodEnumMap = {
@@ -325,4 +327,6 @@ const _$ActionMethodEnumMap = {
   ActionMethod.sideLoadExternalProvider: 'sideLoadExternalProvider',
   ActionMethod.startLog: 'startLog',
   ActionMethod.stopLog: 'stopLog',
+  ActionMethod.startListener: 'startListener',
+  ActionMethod.stopListener: 'stopListener',
 };

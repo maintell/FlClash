@@ -57,19 +57,18 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
     );
   }
 
-  _changeProfile() async {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final appController = globalState.appController;
-      appController.appState.delayMap = {};
-      await appController.applyProfile();
-    });
-  }
-
   Widget _changeProfileContainer(Widget child) {
     return Selector<Config, String?>(
       selector: (_, config) => config.currentProfileId,
+      shouldRebuild: (prev, next) {
+        if (prev != next) {
+          final appController = globalState.appController;
+          appController.appState.delayMap = {};
+          appController.applyProfile();
+        }
+        return prev != next;
+      },
       builder: (__, state, child) {
-        _changeProfile();
         return child!;
       },
       child: child,

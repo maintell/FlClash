@@ -1,6 +1,5 @@
 package main
 
-import "C"
 import (
 	"context"
 	"core/state"
@@ -11,12 +10,10 @@ import (
 	"github.com/metacubex/mihomo/hub/route"
 	"github.com/samber/lo"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/metacubex/mihomo/adapter"
@@ -29,7 +26,6 @@ import (
 	"github.com/metacubex/mihomo/constant"
 	cp "github.com/metacubex/mihomo/constant/provider"
 	"github.com/metacubex/mihomo/hub"
-	"github.com/metacubex/mihomo/hub/executor"
 	"github.com/metacubex/mihomo/listener"
 	"github.com/metacubex/mihomo/log"
 	rp "github.com/metacubex/mihomo/rules/provider"
@@ -88,30 +84,6 @@ var (
 	b, _      = batch.New[bool](context.Background(), batch.WithConcurrencyNum[bool](50))
 )
 
-func restartExecutable(execPath string) {
-	var err error
-	executor.Shutdown()
-	if runtime.GOOS == "windows" {
-		cmd := exec.Command(execPath, os.Args[1:]...)
-		log.Infoln("restarting: %q %q", execPath, os.Args[1:])
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Start()
-		if err != nil {
-			log.Fatalln("restarting: %s", err)
-		}
-
-		os.Exit(0)
-	}
-
-	log.Infoln("restarting: %q %q", execPath, os.Args[1:])
-	err = syscall.Exec(execPath, os.Args, os.Environ())
-	if err != nil {
-		log.Fatalln("restarting: %s", err)
-	}
-}
-
 func readFile(path string) ([]byte, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil, err
@@ -122,19 +94,6 @@ func readFile(path string) ([]byte, error) {
 	}
 
 	return data, err
-}
-
-func removeFile(path string) error {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return err
-	}
-	err = os.Remove(absPath)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func getProfilePath(id string) string {
@@ -359,12 +318,9 @@ func patchConfig(general *config.General, controller *config.Controller, tls *co
 }
 
 func updateListeners(general *config.General, listeners map[string]constant.InboundListener) {
-	b.Wait()
 	if !isRunning {
 		return
 	}
-	runLock.Lock()
-	defer runLock.Unlock()
 	stopListeners()
 	listener.PatchInboundListeners(listeners, tunnel.Tunnel, true)
 	listener.SetAllowLan(general.AllowLan)
@@ -415,6 +371,8 @@ func patchSelectGroup() {
 }
 
 func applyConfig() error {
+	runLock.Lock()
+	defer runLock.Unlock()
 	cfg, err := config.ParseRawConfig(state.CurrentRawConfig)
 	if err != nil {
 		cfg, _ = config.ParseRawConfig(config.DefaultRawConfig())
@@ -422,7 +380,7 @@ func applyConfig() error {
 	if configParams.IsPatch {
 		patchConfig(cfg.General, cfg.Controller, cfg.TLS)
 	} else {
-		closeConnections()
+		handleCloseConnectionsUnLock()
 		runtime.GC()
 		hub.ApplyConfig(cfg)
 		patchSelectGroup()

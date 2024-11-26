@@ -77,6 +77,7 @@ class ClashLib with ClashInterface {
         receiver.close();
       }
     });
+    JsonCodec;
     final params = json.encode(updateConfigParams);
     final paramsChar = params.toNativeUtf8().cast<Char>();
     clashFFI.updateConfig(
@@ -198,24 +199,52 @@ class ClashLib with ClashInterface {
     return res == 1;
   }
 
-  startListener() {
-    clashFFI.startListener();
+  @override
+  String getConnections() {
+    final connectionsDataRaw = clashFFI.getConnections();
+    final connectionsString = connectionsDataRaw.cast<Utf8>().toDartString();
+    clashFFI.freeCString(connectionsDataRaw);
+    return connectionsString;
+    // final connectionsRaw = connectionsData['connections'] as List? ?? [];
+    // return connectionsRaw.map((e) => Connection.fromJson(e)).toList();
   }
 
+  @override
+  closeConnection(String id) {
+    final idChar = id.toNativeUtf8().cast<Char>();
+    clashFFI.closeConnection(idChar);
+    malloc.free(idChar);
+    return true;
+  }
+
+  @override
+  closeConnections() {
+    clashFFI.closeConnections();
+    return true;
+  }
+
+  @override
+  startListener() async {
+    clashFFI.startListener();
+    return true;
+  }
+
+  @override
   stopListener() {
     clashFFI.stopListener();
   }
 
-  Future<Delay> asyncTestDelay(String proxyName) {
+  @override
+  Future<String> asyncTestDelay(String proxyName) {
     final delayParams = {
       "proxy-name": proxyName,
       "timeout": httpTimeoutDuration.inMilliseconds,
     };
-    final completer = Completer<Delay>();
+    final completer = Completer<String>();
     final receiver = ReceivePort();
     receiver.listen((message) {
       if (!completer.isCompleted) {
-        completer.complete(Delay.fromJson(json.decode(message)));
+        completer.complete(message);
         receiver.close();
       }
     });
@@ -264,26 +293,8 @@ class ClashLib with ClashInterface {
     clashFFI.forceGc();
   }
 
-  List<Connection> getConnections() {
-    final connectionsDataRaw = clashFFI.getConnections();
-    final connectionsData =
-        json.decode(connectionsDataRaw.cast<Utf8>().toDartString()) as Map;
-    clashFFI.freeCString(connectionsDataRaw);
-    final connectionsRaw = connectionsData['connections'] as List? ?? [];
-    return connectionsRaw.map((e) => Connection.fromJson(e)).toList();
-  }
-
-  closeConnection(String id) {
-    final idChar = id.toNativeUtf8().cast<Char>();
-    clashFFI.closeConnection(idChar);
-    malloc.free(idChar);
-  }
-
-  closeConnections() {
-    clashFFI.closeConnections();
-  }
-
   /// Android
+
   startTun(int fd, int port) {
     if (!Platform.isAndroid) return;
     clashFFI.startTUN(fd, port);

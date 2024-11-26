@@ -3437,6 +3437,7 @@ Action _$ActionFromJson(Map<String, dynamic> json) {
 mixin _$Action {
   ActionMethod get method => throw _privateConstructorUsedError;
   dynamic get data => throw _privateConstructorUsedError;
+  String get id => throw _privateConstructorUsedError;
 
   /// Serializes this Action to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -3452,7 +3453,7 @@ abstract class $ActionCopyWith<$Res> {
   factory $ActionCopyWith(Action value, $Res Function(Action) then) =
       _$ActionCopyWithImpl<$Res, Action>;
   @useResult
-  $Res call({ActionMethod method, dynamic data});
+  $Res call({ActionMethod method, dynamic data, String id});
 }
 
 /// @nodoc
@@ -3472,6 +3473,7 @@ class _$ActionCopyWithImpl<$Res, $Val extends Action>
   $Res call({
     Object? method = null,
     Object? data = freezed,
+    Object? id = null,
   }) {
     return _then(_value.copyWith(
       method: null == method
@@ -3482,6 +3484,10 @@ class _$ActionCopyWithImpl<$Res, $Val extends Action>
           ? _value.data
           : data // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -3493,7 +3499,7 @@ abstract class _$$ActionImplCopyWith<$Res> implements $ActionCopyWith<$Res> {
       __$$ActionImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({ActionMethod method, dynamic data});
+  $Res call({ActionMethod method, dynamic data, String id});
 }
 
 /// @nodoc
@@ -3511,6 +3517,7 @@ class __$$ActionImplCopyWithImpl<$Res>
   $Res call({
     Object? method = null,
     Object? data = freezed,
+    Object? id = null,
   }) {
     return _then(_$ActionImpl(
       method: null == method
@@ -3521,6 +3528,10 @@ class __$$ActionImplCopyWithImpl<$Res>
           ? _value.data
           : data // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -3528,7 +3539,8 @@ class __$$ActionImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$ActionImpl implements _Action {
-  const _$ActionImpl({required this.method, required this.data});
+  const _$ActionImpl(
+      {required this.method, required this.data, required this.id});
 
   factory _$ActionImpl.fromJson(Map<String, dynamic> json) =>
       _$$ActionImplFromJson(json);
@@ -3537,10 +3549,12 @@ class _$ActionImpl implements _Action {
   final ActionMethod method;
   @override
   final dynamic data;
+  @override
+  final String id;
 
   @override
   String toString() {
-    return 'Action(method: $method, data: $data)';
+    return 'Action(method: $method, data: $data, id: $id)';
   }
 
   @override
@@ -3549,13 +3563,14 @@ class _$ActionImpl implements _Action {
         (other.runtimeType == runtimeType &&
             other is _$ActionImpl &&
             (identical(other.method, method) || other.method == method) &&
-            const DeepCollectionEquality().equals(other.data, data));
+            const DeepCollectionEquality().equals(other.data, data) &&
+            (identical(other.id, id) || other.id == id));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType, method, const DeepCollectionEquality().hash(data));
+      runtimeType, method, const DeepCollectionEquality().hash(data), id);
 
   /// Create a copy of Action
   /// with the given fields replaced by the non-null parameter values.
@@ -3576,7 +3591,8 @@ class _$ActionImpl implements _Action {
 abstract class _Action implements Action {
   const factory _Action(
       {required final ActionMethod method,
-      required final dynamic data}) = _$ActionImpl;
+      required final dynamic data,
+      required final String id}) = _$ActionImpl;
 
   factory _Action.fromJson(Map<String, dynamic> json) = _$ActionImpl.fromJson;
 
@@ -3584,6 +3600,8 @@ abstract class _Action implements Action {
   ActionMethod get method;
   @override
   dynamic get data;
+  @override
+  String get id;
 
   /// Create a copy of Action
   /// with the given fields replaced by the non-null parameter values.

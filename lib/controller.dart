@@ -60,9 +60,9 @@ class AppController {
         updateRunTime,
         updateTraffic,
       ];
-      if (!Platform.isAndroid) {
-        applyProfileDebounce();
-      }
+      // if (!Platform.isAndroid) {
+      //   applyProfileDebounce();
+      // }
     } else {
       await globalState.handleStop();
       clashCore.resetTraffic();
@@ -307,6 +307,8 @@ class AppController {
     if (Platform.isAndroid) {
       globalState.updateStartTime();
     }
+    jsonDecode(source)
+    await applyProfile();
     if (globalState.isStart) {
       await updateStatus(true);
     } else {
