@@ -151,19 +151,17 @@ func getExternalProviders() *C.char {
 }
 
 //export getExternalProvider
-func getExternalProvider(name *C.char) *C.char {
-	runLock.Lock()
-	defer runLock.Unlock()
-	externalProviderName := C.GoString(name)
+func getExternalProvider(externalProviderNameChar *C.char) *C.char {
+	externalProviderName := C.GoString(externalProviderNameChar)
 	return C.CString(handleGetExternalProvider(externalProviderName))
 }
 
 //export updateGeoData
 func updateGeoData(geoTypeChar *C.char, geoNameChar *C.char, port C.longlong) {
 	i := int64(port)
-	geoTypeString := C.GoString(geoTypeChar)
-	geoNameString := C.GoString(geoNameChar)
-	handleUpdateGeoData(geoTypeString, geoNameString, func(value string) {
+	geoType := C.GoString(geoTypeChar)
+	geoName := C.GoString(geoNameChar)
+	handleUpdateGeoData(geoType, geoName, func(value string) {
 		bridge.SendToPort(i, value)
 	})
 }

@@ -1,5 +1,6 @@
 package main
 
+import "C"
 import (
 	"bufio"
 	"encoding/json"
@@ -65,7 +66,10 @@ func handleAction(action *Action) {
 		}.send()
 		return
 	case getIsInitMethod:
-		handleGetIsInit()
+		Action{
+			Method: initClashMethod,
+			Data:   handleGetIsInit(),
+		}.send()
 		return
 	case forceGcMethod:
 		handleForceGc()
@@ -136,10 +140,66 @@ func handleAction(action *Action) {
 		handleCloseConnection(id)
 		return
 	case getExternalProvidersMethod:
+		Action{
+			Method: getExternalProvidersMethod,
+			Data:   handleGetExternalProviders(),
+		}.send()
+		return
 	case getExternalProviderMethod:
+		externalProviderName := action.Data.(string)
+		Action{
+			Method: getExternalProviderMethod,
+			Data:   handleGetExternalProvider(externalProviderName),
+		}.send()
 	case updateGeoDataMethod:
+		paramsString := action.Data.(string)
+		var params = map[string]string{}
+		err := json.Unmarshal([]byte(paramsString), &params)
+		if err != nil {
+			Action{
+				Method: updateGeoDataMethod,
+				Data:   err.Error(),
+			}.send()
+			return
+		}
+		geoType := params["geoType"]
+		geoName := params["geoName"]
+		handleUpdateGeoData(geoType, geoName, func(value string) {
+			Action{
+				Method: updateGeoDataMethod,
+				Data:   value,
+			}.send()
+		})
+		return
 	case updateExternalProviderMethod:
+		providerName := action.Data.(string)
+		handleUpdateExternalProvider(providerName, func(value string) {
+			Action{
+				Method: updateExternalProviderMethod,
+				Data:   value,
+			}.send()
+		})
+		return
 	case sideLoadExternalProviderMethod:
+		paramsString := action.Data.(string)
+		var params = map[string]string{}
+		err := json.Unmarshal([]byte(paramsString), &params)
+		if err != nil {
+			Action{
+				Method: sideLoadExternalProviderMethod,
+				Data:   err.Error(),
+			}.send()
+			return
+		}
+		providerName := params["providerName"]
+		data := params["data"]
+		handleSideLoadExternalProvider(providerName, []byte(data), func(value string) {
+			Action{
+				Method: sideLoadExternalProviderMethod,
+				Data:   value,
+			}.send()
+		})
+		return
 	case startLogMethod:
 		handleStartLog()
 		return
