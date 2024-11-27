@@ -98,7 +98,7 @@ class GlobalState {
     required Config config,
     required ClashConfig clashConfig,
   }) async {
-    // clashCore.requestGc();
+    clashCore.requestGc();
     await updateClashConfig(
       clashConfig: clashConfig,
       config: config,
