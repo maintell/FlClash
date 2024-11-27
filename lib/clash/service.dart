@@ -57,22 +57,22 @@ class ClashService with ClashInterface {
     socketCompleter.complete(socket);
     socket
         .transform(
-      StreamTransformer<Uint8List, String>.fromHandlers(
-        handleData: (Uint8List data, EventSink<String> sink) {
-          sink.add(utf8.decode(data));
-        },
-      ),
-    )
+          StreamTransformer<Uint8List, String>.fromHandlers(
+            handleData: (Uint8List data, EventSink<String> sink) {
+              sink.add(utf8.decode(data));
+            },
+          ),
+        )
         .transform(LineSplitter())
         .listen(
           (data) {
-        _handleAction(
-          Action.fromJson(
-            json.decode(data.trim()),
-          ),
+            _handleAction(
+              Action.fromJson(
+                json.decode(data.trim()),
+              ),
+            );
+          },
         );
-      },
-    );
   }
 
   _handleAction(Action action) {
@@ -131,7 +131,12 @@ class ClashService with ClashInterface {
         ),
       ),
     );
-    return (callbackCompleterMap[id] as Completer<T>).safeFuture(timeout);
+    return (callbackCompleterMap[id] as Completer<T>).safeFuture(
+      timeout: timeout,
+      onLast: () {
+        callbackCompleterMap.remove(id);
+      },
+    );
   }
 
   _prueInvoke({

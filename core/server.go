@@ -87,10 +87,12 @@ func handleAction(action *Action) {
 		action.callback(handleChangeProxy(data))
 		return
 	case getTrafficMethod:
-		action.callback(handleGetTraffic(false))
+		data := action.Data.(bool)
+		action.callback(handleGetTraffic(data))
 		return
 	case getTotalTrafficMethod:
-		action.callback(handleGetTotalTraffic(false))
+		data := action.Data.(bool)
+		action.callback(handleGetTotalTraffic(data))
 		return
 	case resetTrafficMethod:
 		handleResetTraffic()

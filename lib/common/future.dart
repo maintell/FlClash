@@ -1,8 +1,18 @@
 import 'dart:async';
+import 'dart:ui';
 
 extension CompleterExt on Completer {
-  safeFuture(Duration? timeout) {
-    return future.withTimeout(timeout ?? const Duration(seconds: 3));
+  safeFuture({
+    Duration? timeout,
+    VoidCallback? onLast,
+  }) {
+    final realTimeout = timeout ?? const Duration(seconds: 3);
+    Timer(realTimeout, () {
+      if (onLast != null) {
+        onLast();
+      }
+    });
+    return future.withTimeout(realTimeout);
   }
 }
 

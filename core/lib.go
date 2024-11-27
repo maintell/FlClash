@@ -85,13 +85,15 @@ func changeProxy(s *C.char) bool {
 }
 
 //export getTraffic
-func getTraffic() *C.char {
-	return C.CString(handleGetTraffic(false))
+func getTraffic(port C.int) *C.char {
+	onlyProxy := int(port) == 1
+	return C.CString(handleGetTraffic(onlyProxy))
 }
 
 //export getTotalTraffic
-func getTotalTraffic() *C.char {
-	return C.CString(handleGetTotalTraffic(false))
+func getTotalTraffic(port C.int) *C.char {
+	onlyProxy := int(port) == 1
+	return C.CString(handleGetTotalTraffic(onlyProxy))
 }
 
 //export resetTraffic

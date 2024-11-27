@@ -22,6 +22,7 @@ class ClashLib with ClashInterface {
 
   ClashLib._internal() {
     lib = DynamicLibrary.open("libclash.so");
+    clashFFI = ClashFFI(lib);
     if (!globalState.isVpnService) {
       clashFFI.initMessage(
         receiver.sendPort.nativePort,
