@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/future.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
 import 'package:path/path.dart';
@@ -33,9 +34,17 @@ class ClashService with ClashInterface {
     Directory currentDirectory = Directory(dirname(currentExecutablePath));
     final path = join(currentDirectory.path, "core");
     process = await Process.start(path, []);
-    final portString = String.fromCharCodes(await process.stdout.first).trim();
-    final port = int.parse(portString);
-    _connectCore(port);
+    process.stdout.listen((data) {
+      var string = String.fromCharCodes(data);
+      print(string);
+      var value = int.tryParse(string);
+      if (value != null) {
+        _connectCore(value);
+      }
+    });
+    // final portString = String.fromCharCodes(await process.stdout.first).trim();
+    // final port = int.parse(portString);
+    // _connectCore(port);
   }
 
   _connectCore(int port) async {
@@ -110,6 +119,7 @@ class ClashService with ClashInterface {
   Future<T> _invoke<T>({
     required ActionMethod method,
     dynamic data,
+    Duration? timeout,
   }) async {
     final id = "${method.name}#${other.id}";
     final socket = await socketCompleter.future;
@@ -123,7 +133,7 @@ class ClashService with ClashInterface {
         ),
       ),
     );
-    return (callbackCompleterMap[id] as Completer<T>).future;
+    return (callbackCompleterMap[id] as Completer<T>).safeFuture(timeout);
   }
 
   _prueInvoke({
@@ -187,6 +197,7 @@ class ClashService with ClashInterface {
     return _invoke<String>(
       method: ActionMethod.updateConfig,
       data: json.encode(updateConfigParams),
+      timeout: const Duration(seconds: 10),
     );
   }
 
