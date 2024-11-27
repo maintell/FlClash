@@ -30,6 +30,7 @@ class GlobalState {
   late AppController appController;
   GlobalKey<CommonScaffoldState> homeScaffoldKey = GlobalKey();
   List<Function> updateFunctionLists = [];
+  var isNeedUpdate = false;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 

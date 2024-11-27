@@ -60,9 +60,11 @@ class AppController {
         updateRunTime,
         updateTraffic,
       ];
-      // if (!Platform.isAndroid) {
-      //   applyProfileDebounce();
-      // }
+      if (globalState.isNeedUpdate) {
+        applyProfileDebounce();
+      } else {
+        addCheckIpNumDebounce();
+      }
     } else {
       await globalState.handleStop();
       clashCore.resetTraffic();
