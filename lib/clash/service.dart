@@ -31,7 +31,7 @@ class ClashService with ClashInterface {
   _initCore() async {
     final currentExecutablePath = Platform.resolvedExecutable;
     final currentDirectory = Directory(dirname(currentExecutablePath));
-    final path = join(currentDirectory.path, "core");
+    final path = join(currentDirectory.path, "clash");
     process = await Process.start(
       path,
       [],
