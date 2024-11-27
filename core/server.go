@@ -11,7 +11,7 @@ import (
 
 var conn net.Conn
 
-func init() {
+func startServer() {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		os.Exit(1)

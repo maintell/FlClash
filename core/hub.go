@@ -92,8 +92,6 @@ func handleUpdateConfig(bytes []byte) string {
 
 	configParams = params.Params
 	prof := decorationConfig(params.ProfileId, params.Config)
-	runLock.Lock()
-	runLock.Unlock()
 	err = applyConfig(prof)
 	if err != nil {
 		return err.Error()
