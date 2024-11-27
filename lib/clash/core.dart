@@ -195,13 +195,13 @@ class ClashCore {
     return Delay.fromJson(json.decode(data));
   }
 
-  Future<Traffic> getTraffic() async {
-    final trafficString = await clashInterface.getTraffic();
+  Future<Traffic> getTraffic(bool value) async {
+    final trafficString = await clashInterface.getTraffic(value);
     return Traffic.fromMap(json.decode(trafficString));
   }
 
-  Future<Traffic> getTotalTraffic() async {
-    final totalTrafficString = await clashInterface.getTotalTraffic();
+  Future<Traffic> getTotalTraffic(bool value) async {
+    final totalTrafficString = await clashInterface.getTotalTraffic(value);
     return Traffic.fromMap(json.decode(totalTrafficString));
   }
 

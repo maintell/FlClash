@@ -291,16 +291,18 @@ class ClashService with ClashInterface {
   }
 
   @override
-  FutureOr<String> getTotalTraffic() {
+  FutureOr<String> getTotalTraffic(bool value) {
     return _invoke<String>(
       method: ActionMethod.getTotalTraffic,
+      data: value,
     );
   }
 
   @override
-  FutureOr<String> getTraffic() {
+  FutureOr<String> getTraffic(bool value) {
     return _invoke<String>(
       method: ActionMethod.getTraffic,
+      data: value,
     );
   }
 

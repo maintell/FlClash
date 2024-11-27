@@ -217,9 +217,11 @@ class GlobalState {
   }
 
   updateTraffic({
+    required Config config,
     AppFlowingState? appFlowingState,
   }) async {
-    final traffic = await clashCore.getTraffic();
+    final onlyProxy = config.appSetting.onlyProxy;
+    final traffic = await clashCore.getTraffic(onlyProxy);
     if (Platform.isAndroid && isVpnService == true) {
       vpn?.startForeground(
         title: clashLib?.getCurrentProfileName() ?? "",
@@ -228,7 +230,8 @@ class GlobalState {
     } else {
       if (appFlowingState != null) {
         appFlowingState.addTraffic(traffic);
-        appFlowingState.totalTraffic = await clashCore.getTotalTraffic();
+        appFlowingState.totalTraffic =
+            await clashCore.getTotalTraffic(onlyProxy);
       }
     }
   }

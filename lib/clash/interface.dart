@@ -41,9 +41,9 @@ mixin ClashInterface {
 
   Future<String> updateExternalProvider({required String providerName});
 
-  FutureOr<String> getTraffic();
+  FutureOr<String> getTraffic(bool value);
 
-  FutureOr<String> getTotalTraffic();
+  FutureOr<String> getTotalTraffic(bool value);
 
   resetTraffic();
 

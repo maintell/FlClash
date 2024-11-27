@@ -263,16 +263,16 @@ class ClashLib with ClashInterface {
   }
 
   @override
-  String getTraffic() {
-    final trafficRaw = clashFFI.getTraffic();
+  String getTraffic(bool value) {
+    final trafficRaw = clashFFI.getTraffic(value ? 1 : 0);
     final trafficString = trafficRaw.cast<Utf8>().toDartString();
     clashFFI.freeCString(trafficRaw);
     return trafficString;
   }
 
   @override
-  String getTotalTraffic() {
-    final trafficRaw = clashFFI.getTotalTraffic();
+  String getTotalTraffic(bool value) {
+    final trafficRaw = clashFFI.getTotalTraffic(value ? 1 : 0);
     clashFFI.freeCString(trafficRaw);
     return trafficRaw.cast<Utf8>().toDartString();
   }

@@ -128,10 +128,10 @@ Future<void> vpnService() async {
     ),
   );
 
-  globalState.updateTraffic();
+  globalState.updateTraffic(config: config);
   globalState.updateFunctionLists = [
     () {
-      globalState.updateTraffic();
+      globalState.updateTraffic(config: config);
     }
   ];
 }

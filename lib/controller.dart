@@ -86,6 +86,7 @@ class AppController {
 
   updateTraffic() {
     globalState.updateTraffic(
+      config: config,
       appFlowingState: appFlowingState,
     );
   }

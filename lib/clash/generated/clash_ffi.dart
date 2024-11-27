@@ -2515,25 +2515,33 @@ class ClashFFI {
   late final _changeProxy =
       _changeProxyPtr.asFunction<int Function(ffi.Pointer<ffi.Char>)>();
 
-  ffi.Pointer<ffi.Char> getTraffic() {
-    return _getTraffic();
+  ffi.Pointer<ffi.Char> getTraffic(
+    int port,
+  ) {
+    return _getTraffic(
+      port,
+    );
   }
 
   late final _getTrafficPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function(ffi.Int)>>(
           'getTraffic');
   late final _getTraffic =
-      _getTrafficPtr.asFunction<ffi.Pointer<ffi.Char> Function()>();
+      _getTrafficPtr.asFunction<ffi.Pointer<ffi.Char> Function(int)>();
 
-  ffi.Pointer<ffi.Char> getTotalTraffic() {
-    return _getTotalTraffic();
+  ffi.Pointer<ffi.Char> getTotalTraffic(
+    int port,
+  ) {
+    return _getTotalTraffic(
+      port,
+    );
   }
 
   late final _getTotalTrafficPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function(ffi.Int)>>(
           'getTotalTraffic');
   late final _getTotalTraffic =
-      _getTotalTrafficPtr.asFunction<ffi.Pointer<ffi.Char> Function()>();
+      _getTotalTrafficPtr.asFunction<ffi.Pointer<ffi.Char> Function(int)>();
 
   void resetTraffic() {
     return _resetTraffic();
