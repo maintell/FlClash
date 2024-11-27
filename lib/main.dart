@@ -84,6 +84,7 @@ Future<void> vpnService() async {
       .updateClashConfig(
     clashConfig: clashConfig,
     config: config,
+    isPatch: false,
   )
       .then(
     (_) async {
@@ -100,7 +101,6 @@ Future<void> vpnService() async {
           },
         ),
       );
-
       globalState.updateTraffic(config: config);
       globalState.updateFunctionLists = [
         () {
