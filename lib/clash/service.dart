@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
+import 'package:path/path.dart';
 
 class ClashService with ClashInterface {
   static ClashService? _instance;
@@ -23,30 +25,20 @@ class ClashService with ClashInterface {
   }
 
   ClashService._internal() {
-    _connectCore(53062);
+    _initCore();
   }
 
   _initCore() async {
-    // String currentExecutablePath = Platform.resolvedExecutable;
-    // Directory currentDirectory = Directory(dirname(currentExecutablePath));
-    // final path = join(currentDirectory.path, "core");
-    // process = await Process.start(path, []);
-    // process.stdout.listen((data) {
-    //   var string = String.fromCharCodes(data);
-    //   print(string);
-    //   var value = int.tryParse(string);
-    //   if (value != null) {
-    //     _connectCore(value);
-    //   }
-    // });
-
-    // final portString = String.fromCharCodes(await process.stdout.first).trim();
-    // final port = int.parse(portString);
-    // _connectCore(port);
+    String currentExecutablePath = Platform.resolvedExecutable;
+    Directory currentDirectory = Directory(dirname(currentExecutablePath));
+    final path = join(currentDirectory.path, "core");
+    process = await Process.start(path, []);
+    final portString = String.fromCharCodes(await process.stdout.first).trim();
+    final port = int.parse(portString);
+    _connectCore(port);
   }
 
   _connectCore(int port) async {
-    print("_connectCore ==>");
     if (socketCompleter.isCompleted) {
       final socket = await socketCompleter.future;
       await socket.close();
@@ -104,6 +96,8 @@ class ClashService with ClashInterface {
         completer?.complete(action.data as String);
         return;
       case ActionMethod.message:
+        clashMessage.controller.add(action.data as String);
+        return;
       case ActionMethod.forceGc:
       case ActionMethod.startLog:
       case ActionMethod.stopLog:

@@ -7,13 +7,14 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/state.dart';
 
 import 'generated/clash_ffi.dart';
 import 'interface.dart';
 
 class ClashLib with ClashInterface {
   static ClashLib? _instance;
-  static final receiver = ReceivePort();
+  final receiver = ReceivePort();
 
   late final ClashFFI clashFFI;
 
@@ -21,9 +22,11 @@ class ClashLib with ClashInterface {
 
   ClashLib._internal() {
     lib = DynamicLibrary.open("libclash.so");
-    clashFFI.initMessage(
-      receiver.sendPort.nativePort,
-    );
+    if (!globalState.isVpnService) {
+      clashFFI.initMessage(
+        receiver.sendPort.nativePort,
+      );
+    }
   }
 
   factory ClashLib() {
