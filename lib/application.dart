@@ -1,8 +1,9 @@
 import 'dart:async';
+
 import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/manager/hotkey_manager.dart';
 import 'package:fl_clash/manager/manager.dart';
 import 'package:fl_clash/plugins/app.dart';
@@ -246,7 +247,7 @@ class ApplicationState extends State<Application> {
   Future<void> dispose() async {
     linkManager.destroy();
     await globalState.appController.savePreferences();
-    super.dispose();
     _cancelTimer();
+    super.dispose();
   }
 }

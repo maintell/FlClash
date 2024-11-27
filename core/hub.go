@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"core/state"
 	"encoding/json"
 	"fmt"
 	"github.com/metacubex/mihomo/adapter"
@@ -29,6 +28,7 @@ var (
 	configParams      = ConfigExtendedParams{}
 	externalProviders = map[string]cp.Provider{}
 	logSubscriber     observable.Subscription[log.Event]
+	currentConfig     *config.Config
 )
 
 func handleInitClash(homeDirStr string) bool {
@@ -43,6 +43,7 @@ func handleStartListener() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	isRunning = true
+	updateListeners()
 	return true
 }
 
@@ -92,9 +93,8 @@ func handleUpdateConfig(bytes []byte) string {
 	configParams = params.Params
 	prof := decorationConfig(params.ProfileId, params.Config)
 	runLock.Lock()
-	state.CurrentRawConfig = prof
 	runLock.Unlock()
-	err = applyConfig()
+	err = applyConfig(prof)
 	if err != nil {
 		return err.Error()
 	}
@@ -143,8 +143,8 @@ func handleChangeProxy(data string) bool {
 	return true
 }
 
-func handleGetTraffic() string {
-	up, down := statistic.DefaultManager.Current(state.CurrentState.OnlyProxy)
+func handleGetTraffic(onlyProxy bool) string {
+	up, down := statistic.DefaultManager.Current(onlyProxy)
 	traffic := map[string]int64{
 		"up":   up,
 		"down": down,
@@ -157,8 +157,8 @@ func handleGetTraffic() string {
 	return string(data)
 }
 
-func handleGetTotalTraffic() string {
-	up, down := statistic.DefaultManager.Total(state.CurrentState.OnlyProxy)
+func handleGetTotalTraffic(onlyProxy bool) string {
+	up, down := statistic.DefaultManager.Total(onlyProxy)
 	traffic := map[string]int64{
 		"up":   up,
 		"down": down,

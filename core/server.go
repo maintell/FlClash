@@ -16,7 +16,7 @@ func init() {
 	if err != nil {
 		os.Exit(1)
 	}
-	fmt.Printf("%d\n ", listener.Addr().(*net.TCPAddr).Port)
+	fmt.Printf("[port]: %d\n ", listener.Addr().(*net.TCPAddr).Port)
 	defer func(listener net.Listener) {
 		_ = listener.Close()
 	}(listener)
@@ -87,10 +87,10 @@ func handleAction(action *Action) {
 		action.callback(handleChangeProxy(data))
 		return
 	case getTrafficMethod:
-		action.callback(handleGetTraffic())
+		action.callback(handleGetTraffic(false))
 		return
 	case getTotalTrafficMethod:
-		action.callback(handleGetTotalTraffic())
+		action.callback(handleGetTotalTraffic(false))
 		return
 	case resetTrafficMethod:
 		handleResetTraffic()

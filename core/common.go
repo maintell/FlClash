@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"core/state"
 	"errors"
 	"fmt"
 	"github.com/metacubex/mihomo/common/batch"
@@ -289,8 +288,11 @@ func overwriteConfig(targetConfig *config.RawConfig, patchConfig config.RawConfi
 	overrideRules(&targetConfig.Rule)
 }
 
-func patchConfig(general *config.General, controller *config.Controller, tls *config.TLS) {
+func patchConfig() {
 	log.Infoln("[Apply] patch")
+	general := currentConfig.General
+	controller := currentConfig.Controller
+	tls := currentConfig.TLS
 	tunnel.SetSniffing(general.Sniffing)
 	tunnel.SetFindProcessMode(general.FindProcessMode)
 	dialer.SetTcpConcurrent(general.TCPConcurrent)
@@ -317,10 +319,12 @@ func patchConfig(general *config.General, controller *config.Controller, tls *co
 	})
 }
 
-func updateListeners(general *config.General, listeners map[string]constant.InboundListener) {
+func updateListeners() {
 	if !isRunning {
 		return
 	}
+	general := currentConfig.General
+	listeners := currentConfig.Listeners
 	stopListeners()
 	listener.PatchInboundListeners(listeners, tunnel.Tunnel, true)
 	listener.SetAllowLan(general.AllowLan)
@@ -370,21 +374,22 @@ func patchSelectGroup() {
 	}
 }
 
-func applyConfig() error {
+func applyConfig(rawConfig *config.RawConfig) error {
 	runLock.Lock()
 	defer runLock.Unlock()
-	cfg, err := config.ParseRawConfig(state.CurrentRawConfig)
+	var err error
+	currentConfig, err = config.ParseRawConfig(rawConfig)
 	if err != nil {
-		cfg, _ = config.ParseRawConfig(config.DefaultRawConfig())
+		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
 	}
 	if configParams.IsPatch {
-		patchConfig(cfg.General, cfg.Controller, cfg.TLS)
+		patchConfig()
 	} else {
 		handleCloseConnectionsUnLock()
 		runtime.GC()
-		hub.ApplyConfig(cfg)
+		hub.ApplyConfig(currentConfig)
 		patchSelectGroup()
 	}
-	updateListeners(cfg.General, cfg.Listeners)
+	updateListeners()
 	return err
 }

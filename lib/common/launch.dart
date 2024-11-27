@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:fl_clash/models/models.dart' hide Process;
+
+import 'package:fl_clash/models/models.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 
 import 'constant.dart';

@@ -86,12 +86,12 @@ func changeProxy(s *C.char) bool {
 
 //export getTraffic
 func getTraffic() *C.char {
-	return C.CString(handleGetTraffic())
+	return C.CString(handleGetTraffic(false))
 }
 
 //export getTotalTraffic
 func getTotalTraffic() *C.char {
-	return C.CString(handleGetTotalTraffic())
+	return C.CString(handleGetTotalTraffic(false))
 }
 
 //export resetTraffic

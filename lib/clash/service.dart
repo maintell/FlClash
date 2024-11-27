@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/future.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
 import 'package:path/path.dart';
@@ -30,21 +29,22 @@ class ClashService with ClashInterface {
   }
 
   _initCore() async {
-    String currentExecutablePath = Platform.resolvedExecutable;
-    Directory currentDirectory = Directory(dirname(currentExecutablePath));
+    final currentExecutablePath = Platform.resolvedExecutable;
+    final currentDirectory = Directory(dirname(currentExecutablePath));
     final path = join(currentDirectory.path, "core");
-    process = await Process.start(path, []);
-    process.stdout.listen((data) {
-      var string = String.fromCharCodes(data);
-      print(string);
-      var value = int.tryParse(string);
-      if (value != null) {
-        _connectCore(value);
+    process = await Process.start(
+      path,
+      [],
+    );
+    process.stdout
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen((output) async {
+      if (output.startsWith("[port]: ")) {
+        final portString = output.replaceFirst("[port]: ", "");
+        await _connectCore(int.parse(portString));
       }
     });
-    // final portString = String.fromCharCodes(await process.stdout.first).trim();
-    // final port = int.parse(portString);
-    // _connectCore(port);
   }
 
   _connectCore(int port) async {
@@ -55,26 +55,24 @@ class ClashService with ClashInterface {
     }
     final socket = await Socket.connect(localhost, port);
     socketCompleter.complete(socket);
-
     socket
         .transform(
-          StreamTransformer<Uint8List, String>.fromHandlers(
-            handleData: (Uint8List data, EventSink<String> sink) {
-              sink.add(utf8.decode(data));
-            },
-          ),
-        )
+      StreamTransformer<Uint8List, String>.fromHandlers(
+        handleData: (Uint8List data, EventSink<String> sink) {
+          sink.add(utf8.decode(data));
+        },
+      ),
+    )
         .transform(LineSplitter())
         .listen(
           (data) {
-            print(data);
-            _handleAction(
-              Action.fromJson(
-                json.decode(data.trim()),
-              ),
-            );
-          },
+        _handleAction(
+          Action.fromJson(
+            json.decode(data.trim()),
+          ),
         );
+      },
+    );
   }
 
   _handleAction(Action action) {
@@ -163,13 +161,11 @@ class ClashService with ClashInterface {
 
   @override
   shutdown() async {
-    final res = await _invoke<bool>(
+    await _invoke<bool>(
       method: ActionMethod.shutdown,
     );
-    if (!res) {
-      return;
-    }
-    process.kill();
+    (await socketCompleter.future).destroy();
+    process.kill(ProcessSignal.sigkill);
   }
 
   @override

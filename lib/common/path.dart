@@ -41,6 +41,11 @@ class AppPath {
     return directory.path;
   }
 
+  Future<String> getLockFilePath() async {
+    final directory = await dataDir.future;
+    return join(directory.path, "FlClash.lock");
+  }
+
   Future<String> getProfilesPath() async {
     final directory = await dataDir.future;
     return join(directory.path, profilesDirectoryName);
