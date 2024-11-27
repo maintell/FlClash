@@ -30,7 +30,7 @@
 		5377B2253E1C5AB4D9D56A31 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72CBDF47BB69EDEFE644C48D /* Pods_RunnerTests.framework */; };
 		7AC6855B2B8AF836004C123B /* (null) in Bundle Framework */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		CDD319C761C7664F6008596B /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4121E8CCDC7DC35194714CDE /* Pods_Runner.framework */; };
-		F5FAC0B22CEDCABD000CF079 /* core in CopyFiles */ = {isa = PBXBuildFile; fileRef = F5FAC0B12CEDCABD000CF079 /* core */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		F50091052CF74B7700D43AEA /* clash in CopyFiles */ = {isa = PBXBuildFile; fileRef = F50091042CF74B7700D43AEA /* clash */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +62,16 @@
 			name = "Bundle Framework";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F50091032CF74B6400D43AEA /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				F50091052CF74B7700D43AEA /* clash in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5FAC0AA2CEDC4DA000CF079 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
@@ -77,7 +87,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 6;
 			files = (
-				F5FAC0B22CEDCABD000CF079 /* core in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,7 +120,7 @@
 		8F1D6D6423063FA738863205 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		CA9CA9C2D0B5E93A91F45924 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
-		F5FAC0B12CEDCABD000CF079 /* core */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = core; path = ../libclash/macos/core; sourceTree = "<group>"; };
+		F50091042CF74B7700D43AEA /* clash */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = clash; path = ../libclash/macos/clash; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,7 +165,7 @@
 		33CC10E42044A3C60003C045 = {
 			isa = PBXGroup;
 			children = (
-				F5FAC0B12CEDCABD000CF079 /* core */,
+				F50091042CF74B7700D43AEA /* clash */,
 				33FAB671232836740065AC1E /* Runner */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
@@ -268,6 +277,7 @@
 				3399D490228B24CF009A79C7 /* ShellScript */,
 				1522C6AC211009D2A7DFAD40 /* [CP] Embed Pods Frameworks */,
 				F5FAC0AE2CEDC891000CF079 /* CopyFiles */,
+				F50091032CF74B6400D43AEA /* CopyFiles */,
 			);
 			buildRules = (
 			);
