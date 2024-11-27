@@ -327,6 +327,9 @@ class GlobalState {
     required ClashConfig clashConfig,
     bool focus = false,
   }) async {
+    if (Platform.isAndroid) {
+      return;
+    }
     if (!Platform.isLinux) {
       await _updateSystemTray(
         brightness: appState.brightness,
