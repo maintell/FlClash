@@ -80,6 +80,36 @@ Future<void> vpnService() async {
     clashConfig: clashConfig,
   );
 
+  globalState
+      .updateClashConfig(
+    clashConfig: clashConfig,
+    config: config,
+  )
+      .then(
+    (_) async {
+      await app?.tip(appLocalizations.startVpn);
+      await globalState.handleStart();
+
+      tile?.addListener(
+        TileListenerWithVpn(
+          onStop: () async {
+            await app?.tip(appLocalizations.stopVpn);
+            await globalState.handleStop();
+            clashCore.shutdown();
+            exit(0);
+          },
+        ),
+      );
+
+      globalState.updateTraffic(config: config);
+      globalState.updateFunctionLists = [
+        () {
+          globalState.updateTraffic(config: config);
+        }
+      ];
+    },
+  );
+
   vpn?.setServiceMessageHandler(
     ServiceMessageHandler(
       onProtect: (Fd fd) async {
@@ -95,13 +125,6 @@ Future<void> vpnService() async {
           ),
         );
       },
-      onStarted: (String runTime) async {
-        await globalState.applyProfile(
-          appState: appState,
-          config: config,
-          clashConfig: clashConfig,
-        );
-      },
       onLoaded: (String groupName) {
         final currentSelectedMap = config.currentSelectedMap;
         final proxyName = currentSelectedMap[groupName];
@@ -114,43 +137,20 @@ Future<void> vpnService() async {
       },
     ),
   );
-  await app?.tip(appLocalizations.startVpn);
-  await globalState.handleStart();
-
-  tile?.addListener(
-    TileListenerWithVpn(
-      onStop: () async {
-        await app?.tip(appLocalizations.stopVpn);
-        await globalState.handleStop();
-        clashCore.shutdown();
-        exit(0);
-      },
-    ),
-  );
-
-  globalState.updateTraffic(config: config);
-  globalState.updateFunctionLists = [
-    () {
-      globalState.updateTraffic(config: config);
-    }
-  ];
 }
 
 @immutable
 class ServiceMessageHandler with ServiceMessageListener {
   final Function(Fd fd) _onProtect;
   final Function(ProcessData process) _onProcess;
-  final Function(String runTime) _onStarted;
   final Function(String providerName) _onLoaded;
 
   const ServiceMessageHandler({
     required Function(Fd fd) onProtect,
     required Function(ProcessData process) onProcess,
-    required Function(String runTime) onStarted,
     required Function(String providerName) onLoaded,
   })  : _onProtect = onProtect,
         _onProcess = onProcess,
-        _onStarted = onStarted,
         _onLoaded = onLoaded;
 
   @override
@@ -161,11 +161,6 @@ class ServiceMessageHandler with ServiceMessageListener {
   @override
   onProcess(ProcessData process) {
     _onProcess(process);
-  }
-
-  @override
-  onStarted(String runTime) {
-    _onStarted(runTime);
   }
 
   @override
