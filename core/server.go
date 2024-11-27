@@ -90,7 +90,7 @@ func handleAction(action *Action) {
 		action.callback(handleGetTraffic())
 		return
 	case getTotalTrafficMethod:
-		action.callback(handleGetExternalProviders())
+		action.callback(handleGetTotalTraffic())
 		return
 	case resetTrafficMethod:
 		handleResetTraffic()

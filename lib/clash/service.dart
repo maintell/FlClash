@@ -33,9 +33,17 @@ class ClashService with ClashInterface {
     Directory currentDirectory = Directory(dirname(currentExecutablePath));
     final path = join(currentDirectory.path, "core");
     process = await Process.start(path, []);
-    final portString = String.fromCharCodes(await process.stdout.first).trim();
-    final port = int.parse(portString);
-    _connectCore(port);
+    process.stdout.listen((data) {
+      var string = String.fromCharCodes(data);
+      print(string);
+      var value = int.tryParse(string);
+      if (value != null) {
+        _connectCore(value);
+      }
+    });
+    // final portString = String.fromCharCodes(await process.stdout.first).trim();
+    // final port = int.parse(portString);
+    // _connectCore(port);
   }
 
   _connectCore(int port) async {
