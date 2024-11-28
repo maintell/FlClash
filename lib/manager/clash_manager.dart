@@ -62,9 +62,11 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
       selector: (_, config) => config.currentProfileId,
       shouldRebuild: (prev, next) {
         if (prev != next) {
-          final appController = globalState.appController;
-          appController.appState.delayMap = {};
-          appController.applyProfile();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final appController = globalState.appController;
+            appController.appState.delayMap = {};
+            appController.applyProfile();
+          });
         }
         return prev != next;
       },

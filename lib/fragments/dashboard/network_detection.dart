@@ -9,6 +9,13 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+final networkDetectionState = ValueNotifier<NetworkDetectionState>(
+  const NetworkDetectionState(
+    isTesting: true,
+    ipInfo: null,
+  ),
+);
+
 class NetworkDetection extends StatefulWidget {
   const NetworkDetection({super.key});
 
@@ -17,12 +24,6 @@ class NetworkDetection extends StatefulWidget {
 }
 
 class _NetworkDetectionState extends State<NetworkDetection> {
-  final networkDetectionState = ValueNotifier<NetworkDetectionState>(
-    const NetworkDetectionState(
-      isTesting: true,
-      ipInfo: null,
-    ),
-  );
   bool? _preIsStart;
   Function? _checkIpDebounce;
   Timer? _setTimeoutTimer;
@@ -95,7 +96,6 @@ class _NetworkDetectionState extends State<NetworkDetection> {
   @override
   void dispose() {
     super.dispose();
-    networkDetectionState.dispose();
   }
 
   String countryCodeToEmoji(String countryCode) {

@@ -155,6 +155,9 @@ class ClashCore {
     if (externalProvidersRawString == null) {
       return null;
     }
+    if (externalProvidersRawString.isEmpty) {
+      return null;
+    }
     return ExternalProvider.fromJson(json.decode(externalProvidersRawString));
   }
 
