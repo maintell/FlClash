@@ -87,6 +87,7 @@ class ClashService with ClashInterface {
       case ActionMethod.closeConnections:
       case ActionMethod.closeConnection:
       case ActionMethod.changeProxy:
+      case ActionMethod.stopListener:
         completer?.complete(action.data as bool);
         return;
       case ActionMethod.getProxies:
@@ -109,7 +110,6 @@ class ClashService with ClashInterface {
       case ActionMethod.forceGc:
       case ActionMethod.startLog:
       case ActionMethod.stopLog:
-      case ActionMethod.stopListener:
       default:
         return;
     }
