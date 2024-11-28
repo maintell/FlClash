@@ -60,11 +60,18 @@ class AppController {
         updateRunTime,
         updateTraffic,
       ];
-      if (globalState.isNeedUpdate) {
-        applyProfileDebounce();
-      } else {
+      final currentLastModified =
+          await config.getCurrentProfile()?.profileLastModified;
+      if (currentLastModified == null ||
+          globalState.lastProfileModified == null) {
         addCheckIpNumDebounce();
+        return;
       }
+      if (currentLastModified <= (globalState.lastProfileModified ?? 0)) {
+        addCheckIpNumDebounce();
+        return;
+      }
+      applyProfileDebounce();
     } else {
       await globalState.handleStop();
       clashCore.resetTraffic();
@@ -129,6 +136,7 @@ class AppController {
     if (commonScaffoldState?.mounted != true) return;
     await commonScaffoldState?.loadingRun(() async {
       await globalState.updateClashConfig(
+        appState: appState,
         clashConfig: clashConfig,
         config: config,
         isPatch: isPatch,
@@ -240,15 +248,6 @@ class AppController {
     system.exit();
   }
 
-  updateLogStatus() {
-    if (config.appSetting.openLogs) {
-      clashCore.startLog();
-    } else {
-      clashCore.stopLog();
-      appFlowingState.logs = [];
-    }
-  }
-
   autoCheckUpdate() async {
     if (!config.appSetting.autoCheckUpdate) return;
     final res = await request.checkForUpdate();
@@ -303,7 +302,6 @@ class AppController {
     if (!isDisclaimerAccepted) {
       handleExit();
     }
-    updateLogStatus();
     if (!config.appSetting.silentLaunch) {
       window?.show();
     }

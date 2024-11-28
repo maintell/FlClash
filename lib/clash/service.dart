@@ -16,7 +16,7 @@ class ClashService with ClashInterface {
 
   Map<String, Completer> callbackCompleterMap = {};
 
-  late final Process process;
+  Process? process;
 
   factory ClashService() {
     _instance ??= ClashService._internal();
@@ -24,15 +24,18 @@ class ClashService with ClashInterface {
   }
 
   ClashService._internal() {
-    _initCore();
+    startCore();
   }
 
-  _initCore() async {
+  Future<Socket> startCore() async {
+    if (process != null) {
+      await shutdown();
+    }
     process = await Process.start(
       appPath.corePath,
       [],
     );
-    process.stdout
+    process?.stdout
         .transform(utf8.decoder)
         .transform(LineSplitter())
         .listen((output) async {
@@ -41,10 +44,12 @@ class ClashService with ClashInterface {
         await _connectCore(int.parse(portString));
       }
     });
+    return socketCompleter.future;
   }
 
   _connectCore(int port) async {
     if (socketCompleter.isCompleted) {
+      callbackCompleterMap.clear();
       final socket = await socketCompleter.future;
       await socket.close();
       socketCompleter = Completer();
@@ -165,8 +170,12 @@ class ClashService with ClashInterface {
     await _invoke<bool>(
       method: ActionMethod.shutdown,
     );
-    (await socketCompleter.future).destroy();
-    process.kill(ProcessSignal.sigkill);
+    final socket = await socketCompleter.future;
+    await socket.close();
+    socket.destroy();
+    process?.kill(ProcessSignal.sigkill);
+    process = null;
+    socketCompleter = Completer();
   }
 
   @override

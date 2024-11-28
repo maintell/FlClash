@@ -18,12 +18,6 @@ class System {
   bool get isDesktop =>
       Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
-  get isAdmin async {
-    if (!Platform.isWindows) return false;
-    final result = await Process.run('net', ['session'], runInShell: true);
-    return result.exitCode == 0;
-  }
-
   Future<int> get version async {
     final deviceInfo = await DeviceInfoPlugin().deviceInfo;
     return switch (Platform.operatingSystem) {
@@ -34,13 +28,37 @@ class System {
     };
   }
 
-  authorizeCore(String? password) async {
-    final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
+  Future<bool> checkIsAdmin(String path) async {
     if (Platform.isMacOS) {
-      String shell = 'chown root:admin $corePath\nchmod +sx $corePath';
-      String command = 'do shell script "$shell" with administrator privileges';
-      await Process.run('osascript', ['-e', command]);
+      final result = await Process.run('stat', ['-f', '%Su:%Sg %Lp', path]);
+      final output = result.stdout.trim();
+      print(output);
+      if (output.startsWith('root:admin') && output.contains('s')) {
+        return true;
+      }
+      return false;
     }
+    return true;
+  }
+
+  Future<bool> authorizeCore({
+    String? password,
+  }) async {
+    final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
+    final isAdmin = await checkIsAdmin(corePath);
+    if (isAdmin) {
+      return false;
+    }
+    if (Platform.isMacOS) {
+      final shell = 'chown root:admin $corePath; chmod +sx $corePath';
+      final arguments = [
+        "-e",
+        'do shell script "$shell" with administrator privileges',
+      ];
+      await Process.run("osascript", arguments);
+      return true;
+    }
+    return false;
   }
 
   back() async {

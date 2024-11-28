@@ -379,6 +379,16 @@ class BuildCommand extends Command {
     );
   }
 
+  Future<String?> get systemArch async {
+    if (Platform.isWindows) {
+      return Platform.environment["PROCESSOR_ARCHITECTURE"];
+    } else if (Platform.isLinux || Platform.isMacOS) {
+      final result = await Process.run('uname', ['-m']);
+      return result.stdout.toString().trim();
+    }
+    return null;
+  }
+
   @override
   Future<void> run() async {
     BuildMode mode =
@@ -404,19 +414,21 @@ class BuildCommand extends Command {
       return;
     }
 
+    final archName = arch?.name ?? await systemArch;
+
     switch (platform) {
       case PlatformType.windows:
         _buildDistributor(
           platform: platform,
           targets: "exe,zip",
-          args: "--description ${arch!.name}",
+          args: "--description $archName",
         );
       case PlatformType.linux:
         await _getLinuxDependencies();
         _buildDistributor(
           platform: platform,
           targets: "appimage,deb,rpm",
-          args: "--description ${arch!.name}",
+          args: "--description $archName",
         );
       case PlatformType.android:
         final targetMap = {
@@ -440,7 +452,7 @@ class BuildCommand extends Command {
         _buildDistributor(
           platform: platform,
           targets: "dmg",
-          args: "--description ${arch!.name}",
+          args: "--description $archName",
         );
     }
   }

@@ -30,7 +30,8 @@ class GlobalState {
   late AppController appController;
   GlobalKey<CommonScaffoldState> homeScaffoldKey = GlobalKey();
   List<Function> updateFunctionLists = [];
-  var isNeedUpdate = false;
+  bool lastTunEnable = false;
+  int? lastProfileModified;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -49,11 +50,29 @@ class GlobalState {
   }
 
   Future<void> updateClashConfig({
+    required AppState appState,
     required ClashConfig clashConfig,
     required Config config,
     bool isPatch = true,
   }) async {
     await config.currentProfile?.checkAndUpdate();
+    if (clashConfig.tun.enable != lastTunEnable && lastTunEnable == false) {
+      if (Platform.isMacOS) {
+        final isAuthorize = await system.authorizeCore();
+        if (isAuthorize) {
+          await clashService?.startCore();
+          await clashCore.init(
+            clashConfig: clashConfig,
+            config: config,
+          );
+        }
+      }
+    }
+    if (config.appSetting.openLogs) {
+      clashCore.startLog();
+    } else {
+      clashCore.stopLog();
+    }
     final res = await clashCore.updateConfig(
       UpdateConfigParams(
         profileId: config.currentProfileId ?? "",
@@ -68,6 +87,8 @@ class GlobalState {
       ),
     );
     if (res.isNotEmpty) throw res;
+    lastTunEnable = clashConfig.tun.enable;
+    lastProfileModified = await config.getCurrentProfile()?.profileLastModified;
   }
 
   handleStart() async {
@@ -101,6 +122,7 @@ class GlobalState {
   }) async {
     clashCore.requestGc();
     await updateClashConfig(
+      appState: appState,
       clashConfig: clashConfig,
       config: config,
       isPatch: false,

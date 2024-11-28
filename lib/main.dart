@@ -82,6 +82,7 @@ Future<void> vpnService() async {
 
   globalState
       .updateClashConfig(
+    appState: appState,
     clashConfig: clashConfig,
     config: config,
     isPatch: false,
