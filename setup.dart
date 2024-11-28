@@ -360,9 +360,9 @@ class BuildCommand extends Command {
   }
 
   _getMacosDependencies() async {
-    // await Build.exec(
-    //   Build.getExecutable("npm install -g appdmg"),
-    // );
+    await Build.exec(
+      Build.getExecutable("npm install -g appdmg"),
+    );
   }
 
   _buildDistributor({
