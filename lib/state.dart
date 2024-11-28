@@ -56,9 +56,7 @@ class GlobalState {
     bool isPatch = true,
   }) async {
     await config.currentProfile?.checkAndUpdate();
-    final useClashConfig = ClashConfig.fromJson(
-      clashConfig.toJson(),
-    );
+    final useClashConfig = clashConfig.copyWith();
     if (clashConfig.tun.enable != lastTunEnable && lastTunEnable == false) {
       if (Platform.isMacOS) {
         final code = await system.authorizeCore();
