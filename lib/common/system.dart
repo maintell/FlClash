@@ -4,6 +4,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
+import 'package:fl_clash/state.dart';
+import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/services.dart';
 
 class System {
@@ -41,9 +43,7 @@ class System {
     return true;
   }
 
-  Future<AuthorizeCode> authorizeCore({
-    String? password,
-  }) async {
+  Future<AuthorizeCode> authorizeCore() async {
     final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
     final isAdmin = await checkIsAdmin(corePath);
     if (isAdmin) {
@@ -56,6 +56,20 @@ class System {
         'do shell script "$shell" with administrator privileges',
       ];
       final result = await Process.run("osascript", arguments);
+      if (result.exitCode != 0) {
+        return AuthorizeCode.error;
+      }
+      return AuthorizeCode.success;
+    } else if (Platform.isLinux) {
+      final password = globalState.showCommonDialog<String>(
+        child: InputDialog(
+          title: appLocalizations.pleaseInputAdminPassword,
+          value: '',
+        ),
+      );
+      final command =
+          '"$password" | sudo -S chown root:root "$corePath" && echo "$password" | sudo -S chmod +sx "$corePath"';
+      final result = await Process.run("echo", [command]);
       if (result.exitCode != 0) {
         return AuthorizeCode.error;
       }
