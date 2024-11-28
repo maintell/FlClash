@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:flutter/services.dart';
 
@@ -30,10 +31,9 @@ class System {
 
   Future<bool> checkIsAdmin(String path) async {
     if (Platform.isMacOS) {
-      final result = await Process.run('stat', ['-f', '%Su:%Sg %Lp', path]);
+      final result = await Process.run('stat', ['-f', '%Su:%Sg %Sp', path]);
       final output = result.stdout.trim();
-      print(output);
-      if (output.startsWith('root:admin') && output.contains('s')) {
+      if (output.startsWith('root:admin') && output.contains('rws')) {
         return true;
       }
       return false;
@@ -41,13 +41,13 @@ class System {
     return true;
   }
 
-  Future<bool> authorizeCore({
+  Future<AuthorizeCode> authorizeCore({
     String? password,
   }) async {
     final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
     final isAdmin = await checkIsAdmin(corePath);
     if (isAdmin) {
-      return false;
+      return AuthorizeCode.none;
     }
     if (Platform.isMacOS) {
       final shell = 'chown root:admin $corePath; chmod +sx $corePath';
@@ -55,10 +55,13 @@ class System {
         "-e",
         'do shell script "$shell" with administrator privileges',
       ];
-      await Process.run("osascript", arguments);
-      return true;
+      final result = await Process.run("osascript", arguments);
+      if (result.exitCode != 0) {
+        return AuthorizeCode.error;
+      }
+      return AuthorizeCode.success;
     }
-    return false;
+    return AuthorizeCode.error;
   }
 
   back() async {

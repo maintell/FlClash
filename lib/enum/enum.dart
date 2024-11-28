@@ -206,3 +206,5 @@ enum ActionMethod {
   startListener,
   stopListener,
 }
+
+enum AuthorizeCode { none, success, error }

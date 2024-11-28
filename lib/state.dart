@@ -56,15 +56,24 @@ class GlobalState {
     bool isPatch = true,
   }) async {
     await config.currentProfile?.checkAndUpdate();
+    final useClashConfig = ClashConfig.fromJson(
+      clashConfig.toJson(),
+    );
     if (clashConfig.tun.enable != lastTunEnable && lastTunEnable == false) {
       if (Platform.isMacOS) {
-        final isAuthorize = await system.authorizeCore();
-        if (isAuthorize) {
-          await clashService?.startCore();
-          await clashCore.init(
-            clashConfig: clashConfig,
-            config: config,
-          );
+        final code = await system.authorizeCore();
+        switch (code) {
+          case AuthorizeCode.none:
+          case AuthorizeCode.success:
+            await clashService?.startCore();
+            await clashCore.init(
+              clashConfig: clashConfig,
+              config: config,
+            );
+          case AuthorizeCode.error:
+            useClashConfig.tun = useClashConfig.tun.copyWith(
+              enable: false,
+            );
         }
       }
     }
@@ -76,7 +85,7 @@ class GlobalState {
     final res = await clashCore.updateConfig(
       UpdateConfigParams(
         profileId: config.currentProfileId ?? "",
-        config: clashConfig,
+        config: useClashConfig,
         params: ConfigExtendedParams(
           isPatch: isPatch,
           isCompatible: true,
@@ -87,7 +96,7 @@ class GlobalState {
       ),
     );
     if (res.isNotEmpty) throw res;
-    lastTunEnable = clashConfig.tun.enable;
+    lastTunEnable = useClashConfig.tun.enable;
     lastProfileModified = await config.getCurrentProfile()?.profileLastModified;
   }
 
