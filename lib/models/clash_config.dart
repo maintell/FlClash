@@ -491,7 +491,7 @@ class ClashConfig extends ChangeNotifier {
       ..allowLan = _allowLan
       ..tcpConcurrent = _tcpConcurrent
       ..logLevel = _logLevel
-      ..tun = tun ?? _tun
+      ..tun = tun
       ..unifiedDelay = _unifiedDelay
       ..geodataLoader = _geodataLoader
       ..externalController = _externalController
