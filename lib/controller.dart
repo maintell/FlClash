@@ -560,12 +560,6 @@ class AppController {
     );
   }
 
-  updateAdminAutoLaunch() {
-    config.appSetting = config.appSetting.copyWith(
-      adminAutoLaunch: !config.appSetting.adminAutoLaunch,
-    );
-  }
-
   updateVisible() async {
     final visible = await window?.isVisible();
     if (visible != null && !visible) {

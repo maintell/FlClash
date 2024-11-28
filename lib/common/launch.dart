@@ -27,34 +27,8 @@ class AutoLaunch {
     return await launchAtStartup.isEnabled();
   }
 
-  Future<bool> get windowsIsEnable async {
-    final res = await Process.run(
-      'schtasks',
-      ['/Query', '/TN', appName, '/V', "/FO", "LIST"],
-      runInShell: true,
-    );
-    return res.stdout.toString().contains(Platform.resolvedExecutable);
-  }
-
   Future<bool> enable() async {
-    if (Platform.isWindows) {
-      await windowsDisable();
-    }
     return await launchAtStartup.enable();
-  }
-
-  windowsDisable() async {
-    final res = await Process.run(
-      'schtasks',
-      [
-        '/Delete',
-        '/TN',
-        appName,
-        '/F',
-      ],
-      runInShell: true,
-    );
-    return res.exitCode == 0;
   }
 
   Future<bool> windowsEnable() async {
@@ -67,20 +41,7 @@ class AutoLaunch {
   }
 
   updateStatus(AutoLaunchState state) async {
-    final isAdminAutoLaunch = state.isAdminAutoLaunch;
     final isAutoLaunch = state.isAutoLaunch;
-    if (Platform.isWindows && isAdminAutoLaunch) {
-      if (await windowsIsEnable == isAutoLaunch) return;
-      if (isAutoLaunch) {
-        final isEnable = await windowsEnable();
-        if (!isEnable) {
-          enable();
-        }
-      } else {
-        windowsDisable();
-      }
-      return;
-    }
     if (await isEnable == isAutoLaunch) return;
     if (isAutoLaunch == true) {
       enable();

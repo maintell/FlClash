@@ -31,6 +31,13 @@ class AppPath {
     return _instance!;
   }
 
+  String get corePath {
+    final extension = Platform.isWindows ? ".exe" : "";
+    final currentExecutablePath = Platform.resolvedExecutable;
+    final currentDirectory = Directory(dirname(currentExecutablePath));
+    return join(currentDirectory.path, "clash$extension");
+  }
+
   Future<String> getDownloadDirPath() async {
     final directory = await downloadDir.future;
     return directory.path;

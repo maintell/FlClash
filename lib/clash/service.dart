@@ -8,7 +8,6 @@ import 'package:fl_clash/clash/interface.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
-import 'package:path/path.dart';
 
 class ClashService with ClashInterface {
   static ClashService? _instance;
@@ -29,11 +28,8 @@ class ClashService with ClashInterface {
   }
 
   _initCore() async {
-    final currentExecutablePath = Platform.resolvedExecutable;
-    final currentDirectory = Directory(dirname(currentExecutablePath));
-    final path = join(currentDirectory.path, "clash");
     process = await Process.start(
-      path,
+      appPath.corePath,
       [],
     );
     process.stdout

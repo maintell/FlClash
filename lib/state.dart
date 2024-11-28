@@ -397,17 +397,6 @@ class GlobalState {
       checked: config.appSetting.autoLaunch,
     );
     menuItems.add(autoStartMenuItem);
-
-    if (Platform.isWindows) {
-      final adminAutoStartMenuItem = MenuItem.checkbox(
-        label: appLocalizations.adminAutoLaunch,
-        onClick: (_) async {
-          globalState.appController.updateAdminAutoLaunch();
-        },
-        checked: config.appSetting.adminAutoLaunch,
-      );
-      menuItems.add(adminAutoStartMenuItem);
-    }
     menuItems.add(MenuItem.separator());
     final exitMenuItem = MenuItem(
       label: appLocalizations.exit,

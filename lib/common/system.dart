@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:flutter/services.dart';
-
-import 'window.dart';
 
 class System {
   static System? _instance;
@@ -33,6 +32,15 @@ class System {
       "windows" => (deviceInfo as WindowsDeviceInfo).majorVersion,
       String() => 0
     };
+  }
+
+  authorizeCore(String? password) async {
+    final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
+    if (Platform.isMacOS) {
+      String shell = 'chown root:admin $corePath\nchmod +sx $corePath';
+      String command = 'do shell script "$shell" with administrator privileges';
+      await Process.run('osascript', ['-e', command]);
+    }
   }
 
   back() async {
