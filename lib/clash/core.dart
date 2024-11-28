@@ -187,8 +187,8 @@ class ClashCore {
     await clashInterface.startListener();
   }
 
-  stopListener() {
-    clashInterface.startListener();
+  stopListener() async {
+   await clashInterface.stopListener();
   }
 
   Future<Delay> getDelay(String proxyName) async {

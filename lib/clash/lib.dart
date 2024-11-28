@@ -233,8 +233,9 @@ class ClashLib with ClashInterface {
   }
 
   @override
-  stopListener() {
+  stopListener() async {
     clashFFI.stopListener();
+    return true;
   }
 
   @override

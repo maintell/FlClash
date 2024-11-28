@@ -163,7 +163,7 @@ func handleAction(action *Action) {
 		action.callback(handleStartListener())
 		return
 	case stopListenerMethod:
-		handleStartListener()
+		action.callback(handleStopListener())
 		return
 	}
 

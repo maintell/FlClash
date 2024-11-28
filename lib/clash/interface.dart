@@ -23,7 +23,7 @@ mixin ClashInterface {
 
   Future<bool> startListener();
 
-  stopListener();
+  Future<bool> stopListener();
 
   FutureOr<String> getExternalProviders();
 

@@ -47,13 +47,12 @@ func handleStartListener() bool {
 	return true
 }
 
-func handleStopListener() {
+func handleStopListener() bool {
 	runLock.Lock()
-	go func() {
-		defer runLock.Unlock()
-		isRunning = false
-		listener.StopListener()
-	}()
+	defer runLock.Unlock()
+	isRunning = false
+	listener.StopListener()
+	return true
 }
 
 func handleGetIsInit() bool {
