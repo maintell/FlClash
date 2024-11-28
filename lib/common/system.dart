@@ -40,6 +40,14 @@ class System {
       }
       return false;
     }
+    if (Platform.isLinux) {
+      final result = await Process.run('stat', ['-c', '%U:%G %A', path]);
+      final output = result.stdout.trim();
+      if (output.startsWith('root:') && output.contains('rwx')) {
+        return true;
+      }
+      return false;
+    }
     return true;
   }
 
